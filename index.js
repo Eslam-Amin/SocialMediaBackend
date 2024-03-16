@@ -8,7 +8,8 @@ const morgan = require('morgan');
 const userRouter = require("./routes/users");
 const authRouter = require("./routes/auth");
 const postRouter = require("./routes/posts");
-var recipeRouter = require('./routes/recipes');
+
+const PORT = process.env.PORT || 3000;
 
 const app = express();
 dotenv.config();
@@ -29,10 +30,9 @@ app.use(morgan("common"));
 app.use("/api/users", userRouter);
 app.use("/api/auth", authRouter);
 app.use("/api/posts", postRouter);
-app.use("/api/recipes/", recipeRouter);
 
 
-app.listen(3000, () => {
+app.listen(PORT, () => {
     console.log("backend server is running")
 })
 
