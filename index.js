@@ -3,17 +3,18 @@ const mongoose = require("mongoose");
 const dotenv = require("dotenv");
 const helmet = require("helmet");
 const morgan = require('morgan');
-
+const cors = require("cors");
 
 const userRouter = require("./routes/users");
 const authRouter = require("./routes/auth");
 const postRouter = require("./routes/posts");
 
-const PORT = process.env.PORT || 3000;
+
 
 const app = express();
 dotenv.config();
 
+app.use(cors())
 mongoose.connect(process.env.MONGO_URL, { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log("connected to MongoDB"))
 
@@ -32,7 +33,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/posts", postRouter);
 
 
-app.listen(PORT, () => {
+app.listen(3000, () => {
     console.log("backend server is running")
 })
 
