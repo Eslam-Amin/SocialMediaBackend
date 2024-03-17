@@ -66,6 +66,26 @@ router.get("/", async (req, res) => {
     }
 })
 
+
+router.get("/search", async (req, res) => {
+    const username = req.query.username;
+    const query = { name: new RegExp("^" + username, "i") }
+    if (username) {
+        console.log(username);
+        try {
+            const user = await User.find(query, { name: 1, username: 1, _id: 1, profilePicture: 1 });
+
+            user.length !== 0 ? res.status(200).json(user) : res.status(404).json("User Not Found!");
+
+        }
+        catch (err) {
+            res.status(500).json(err)
+        }
+    }
+
+})
+
+
 router.get("/", async (req, res) => {
     try {
         //let id = req.params.id;
@@ -76,7 +96,6 @@ router.get("/", async (req, res) => {
         users.map((user) => {
             userMap.push(user)
         })
-        //const { password, updatedAt, ...otherUserInfo } = user._doc
 
         res.status(200).json(userMap);
     }
