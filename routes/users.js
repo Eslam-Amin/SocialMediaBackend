@@ -86,6 +86,25 @@ router.get("/search", async (req, res) => {
 })
 
 
+
+
+router.get("/postLikes", async (req, res) => {
+    const userId = req.query.userId;
+    if (userId) {
+        try {
+            const user = await User.findById({ _id: userId }, { name: 1, username: 1, _id: 1, profilePicture: 1 });
+
+            user.length !== 0 ? res.status(200).json(user) : res.status(404).json("User Not Found!");
+
+        }
+        catch (err) {
+            res.status(500).json(err)
+        }
+    }
+
+})
+
+
 router.get("/", async (req, res) => {
     try {
         //let id = req.params.id;

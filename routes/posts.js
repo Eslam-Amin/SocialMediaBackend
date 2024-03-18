@@ -131,6 +131,35 @@ router.get("/profile/:username", async (req, res) => {
 
 
 
+router.get("/postLikes/:postId", async (req, res) => {
+    try {
+
+        const post = await Post.find({ _id: req.params.postId });
+        //console.log(post)
+        //res.status(200).json(post)
+        //const users = [];
+        console.log(post[0].likes)
+        const users = await Promise.all(
+            post[0].likes.map(async userLikeId => {
+                const userLikesId = await User.findById(userLikeId)
+                return userLikesId;
+            })
+        )
+        let updatedPostLikes = [];
+        users.map(postLike => {
+            const { _id, username, profilePicture, name } = postLike;
+            updatedPostLikes.push({ _id, username, profilePicture, name });
+        })
+        res.status(200).json(updatedPostLikes)
+    }
+    catch (err) {
+        res.status(500).json(err);
+        console.log(err);
+    }
+})
+
+
+
 
 
 

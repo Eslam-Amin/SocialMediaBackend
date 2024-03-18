@@ -33,7 +33,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/posts", postRouter);
 
 
-app.listen(3000, () => {
+app.listen(8000, () => {
     console.log("backend server is running")
 })
 

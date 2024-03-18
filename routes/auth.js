@@ -32,14 +32,7 @@ router.post("/register", async (req, res) => {
         res.status(500).json(err);
     }
 
-    /*const user = await new User({
-        username:"ECaAmiNOo",
-        email:"eca.amino@gmail.com",
-        password:"eca is the best"
 
-    });
-    await user.save();
-    res.send("ok");*/
 })
 
 
@@ -50,6 +43,7 @@ router.post("/login", async (req, res) => {
         const user = await User.findOne({ email: req.body.email });
 
         const errMsg = "Either mail or password is INVALID";
+        console.log(user);
         !user && res.status(404).json(errMsg);
 
         const validPassword = await bcrypt.compare(req.body.password, user.password);
@@ -61,9 +55,6 @@ router.post("/login", async (req, res) => {
     }
 })
 
-router.get("/", (req, res) => {
-    res.send("hey it's auth Router")
-})
 
 
 module.exports = router;
