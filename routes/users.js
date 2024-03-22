@@ -5,29 +5,45 @@ const User = require("../models/User")
 //update user
 router.put("/:id", async (req, res) => {
     if (req.body.userId === req.params.id || req.body.isAdmin) {
+        const user = await User.findById(req.body.userId);
         if (req.body.password) {
             try {
-                const salt = await bcrypt.genSalt(10);
-                req.body.password = await bcrypt.hash(req.body.password, salt)
+                //const salt = await bcrypt.genSalt(10);
+                //req.body.password = await bcrypt.hash(req.body.password, salt)
+                const validPassword = await bcrypt.compare(req.body.password, user.password);
+                if (!validPassword) {
+                    res.status(400).json("Wrong Password");
+                    return;
+                }
+                const updatedUser = await User.findByIdAndUpdate(req.params.id, { $set: { city: req.body.city, from: req.body.from, relationship: req.body.relationship } });
+                const { password, updatedAt, ...otherUserInfo } = updatedUser._doc;
+                res.status(200).json({ msg: "Account Has been Updated", updatedUser: otherUserInfo });
             }
             catch (err) {
                 return res.status(500).json(err);
             }
-        }
-        try {
-            const user = await User.findByIdAndUpdate(req.params.id, { $set: req.body });
-            res.status(200).json("Account Has been Updated");
+        } else {
+            res.status(500).json("Something Went Wrong, Please Try Again Later")
         }
 
-        catch (err) {
-            return res.status(500).json(err);
-
-        }
     }
     else {
         return res.status(403).json("you can only update your account")
     }
 })
+
+
+router.put("/updateDesc/:id", async (req, res) => {
+    try {
+        await User.findByIdAndUpdate(req.params.id, { $set: req.body })
+        res.status(200).json("Description Updated successfully");
+    }
+
+    catch (err) {
+        res.status(500).json("Something Went Wrong!");
+    }
+})
+
 
 
 //delete user

@@ -9,8 +9,6 @@ router.post("/register", async (req, res) => {
         //hashing Password
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(req.body.password, salt);
-
-
         //create new user
         const newUser = new User({
             name: req.body.name,
@@ -43,7 +41,6 @@ router.post("/login", async (req, res) => {
         const user = await User.findOne({ email: req.body.email });
 
         const errMsg = "Either mail or password is INVALID";
-        console.log(user);
         !user && res.status(404).json(errMsg);
 
         const validPassword = await bcrypt.compare(req.body.password, user.password);

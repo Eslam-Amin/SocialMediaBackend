@@ -61,6 +61,10 @@ const UserSchema = new mongoose.Schema({
     },
     relationship: {
         type: Number,
+        enum: [1, 2, 3, 4]
+    },
+    gender: {
+        type: Number,
         enum: [1, 2, 3]
     },
 },
