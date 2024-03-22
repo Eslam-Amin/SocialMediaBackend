@@ -15,7 +15,7 @@ router.put("/:id", async (req, res) => {
                     res.status(400).json("Wrong Password");
                     return;
                 }
-                const updatedUser = await User.findByIdAndUpdate(req.params.id, { $set: { city: req.body.city, from: req.body.from, relationship: req.body.relationship } });
+                const updatedUser = await User.findByIdAndUpdate(req.params.id, { $set: { city: req.body.city, from: req.body.from, relationship: req.body.relationship } }, { returnDocument: 'after' });
                 const { password, updatedAt, ...otherUserInfo } = updatedUser._doc;
                 res.status(200).json({ msg: "Account Has been Updated", updatedUser: otherUserInfo });
             }
@@ -35,8 +35,10 @@ router.put("/:id", async (req, res) => {
 
 router.put("/updateDesc/:id", async (req, res) => {
     try {
-        await User.findByIdAndUpdate(req.params.id, { $set: req.body })
-        res.status(200).json("Description Updated successfully");
+        const updatedUser = await User.findByIdAndUpdate(req.params.id, { $set: req.body }, { returnDocument: 'after' });
+        const { pasword, updatedAt, ...otherUserInfo } = updatedUser._doc;
+        res.status(200).json({ msg: "Description Has been Updated", updatedUser: otherUserInfo });
+
     }
 
     catch (err) {

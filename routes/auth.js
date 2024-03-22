@@ -18,7 +18,8 @@ router.post("/register", async (req, res) => {
             relationship: req.body.relationship,
             city: req.body.city,
             from: req.body.from,
-            desc: req.body.desc
+            desc: req.body.desc,
+            gender: req.body.gender
         });
 
         //save user and return respond
