@@ -65,7 +65,7 @@ const UserSchema = new mongoose.Schema({
     },
     gender: {
         type: Number,
-        enum: [1, 2, 3]
+        enum: ["male", "female"]
     },
 },
     { timestamps: true });
