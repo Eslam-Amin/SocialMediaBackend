@@ -38,7 +38,6 @@ router.put("/updateDesc/:id", async (req, res) => {
         const updatedUser = await User.findByIdAndUpdate(req.params.id, { $set: req.body }, { returnDocument: 'after' });
         const { pasword, updatedAt, ...otherUserInfo } = updatedUser._doc;
         res.status(200).json({ msg: "Description Has been Updated", updatedUser: otherUserInfo });
-
     }
 
     catch (err) {
@@ -55,7 +54,6 @@ router.delete("/:id", async (req, res) => {
             const user = await User.findByIdAndDelete(req.params.id);
             res.status(200).json("Account Has been deleted Successfully");
         }
-
         catch (err) {
             return res.status(404).json(err);
 
@@ -113,7 +111,6 @@ router.get("/postLikes", async (req, res) => {
             const user = await User.findById({ _id: userId }, { name: 1, username: 1, _id: 1, profilePicture: 1 });
 
             user.length !== 0 ? res.status(200).json(user) : res.status(404).json("User Not Found!");
-
         }
         catch (err) {
             res.status(500).json(err)
@@ -154,8 +151,8 @@ router.get("/friends/:userId", async (req, res) => {
         )
         let friendsList = [];
         friends.map(friend => {
-            const { _id, username, profilePicture, name } = friend;
-            friendsList.push({ _id, username, profilePicture, name });
+            const { _id, username, profilePicture, name, gender } = friend;
+            friendsList.push({ _id, username, profilePicture, name, gender });
         })
         res.status(200).json(friendsList);
     } catch (err) {
