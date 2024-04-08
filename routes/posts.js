@@ -21,7 +21,6 @@ router.put("/:id", async (req, res) => {
         if (post.userId === req.body.userId) {
             await post.updateOne({ $set: req.body });
             res.status(200).json("The Post Has Been Updated");
-
         }
         else {
             res.status(403).json("you Can Only Update your Own Post")
