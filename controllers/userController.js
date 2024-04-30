@@ -18,8 +18,8 @@ const getUser = async (req, res, next) => {
     const userId = req.query.userId;
     const username = req.query.username;
     const user = userId
-        ? await User.findById(userId).select("-password -updatedAt -createdAt ")
-        : await User.findOne({ username }).select("-password -updatedAt -createdAt ");
+        ? await User.findById(userId).select("-password -updatedAt -createdAt -passwordChangedAt ")
+        : await User.findOne({ username }).select("-password -updatedAt -createdAt -passwordChangedAt ");
     if (!user)
         return next(new AppError(`No User Found with That username or id`, 404))
 
@@ -29,6 +29,28 @@ const getUser = async (req, res, next) => {
     });
 
 };
+
+const topUsers = async (req, res, next) => {
+    const users = await User.aggregate([
+        { $unwind: "$followers" },
+        {
+            $group: {
+                _id: "$_id",
+                followers: { $push: "$followers" },
+                size: { $sum: 1 }
+            }
+        },
+        { $sort: { size: -1 } },
+        { $limit: 5 }]);
+
+    const top = users.map((user) => user._id);
+    const topOnes = await User.find({ _id: { $in: top } }).select("_id username gender name profilePicture")
+    //const users = await User.find({ $where: "this.followers.length > 6" })
+    res.status(200).json({
+        status: "sucess",
+        users: topOnes
+    })
+}
 
 const authenticateUser = async (req, res, next) => {
     // const token = req.headers.authorization.split(" ")[1];
@@ -191,6 +213,7 @@ const getPostLikes = async (req, res) => {
 
 module.exports = {
     getUser, getAllUsers,
+    topUsers,
     searchUser, updateUser,
     updateUserDesc, deleteUser,
     getUserFriends, followUser,

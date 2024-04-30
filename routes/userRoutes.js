@@ -12,6 +12,10 @@ router.route("/")
 router.route("/authenticate-user")
     .get(catchAsync(userController.authenticateUser))
 
+router.route("/top-5-users")
+    .get(authController.protect,
+        catchAsync(userController.topUsers))
+
 router.route("/:id")
     .put(authController.protect,
         catchAsync(userController.updateUser))
