@@ -50,7 +50,7 @@ const register = catchAsync(async (req, res) => {
 
 const login = catchAsync(async (req, res, next) => {
     const { email, password } = req.body;
-
+    console.log(email, password)
     if (!email || !password)
         return next(new AppError("please Provide email or password", 401))
 

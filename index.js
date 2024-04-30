@@ -41,7 +41,6 @@ app.use("/api/v2/posts", postRouter);
 
 //Redirect unknown Errors
 app.all("*", (req, res, next) => {
-    console.log("a7a")
     next(new AppError(`Can't Find ${req.originalUrl} on this server`, 404));
 })
 
