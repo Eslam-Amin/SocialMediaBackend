@@ -32,35 +32,23 @@ const getUser = async (req, res, next) => {
 
 const topUsers = async (req, res, next) => {
     const users = await User.aggregate([
-        {
-            $unwind: "$followers",
-        },
+        { $unwind: "$followers" },
         {
             $group: {
                 _id: "$_id",
-                size: {
-                    $sum: 1,
-                },
-            },
+                followers: { $push: "$followers" },
+                size: { $sum: 1 }
+            }
         },
-        {
-            $sort: {
-                size: -1,
-            },
-        },
-        {
-            $limit: 5,
-        },
-    ]);
+        { $sort: { size: -1 } },
+        { $limit: 5 }]);
+
     const top = users.map((user) => user._id);
-
-    const topOnes = await User.find({ _id: { $in: top } })
-        .select("_id username gender name profilePicture")
-
+    const topOnes = await User.find({ _id: { $in: top } }).select("_id username gender name profilePicture")
+    //const users = await User.find({ $where: "this.followers.length > 6" })
     res.status(200).json({
         status: "sucess",
-        users:
-            topOnes
+        users: topOnes
     })
 }
 
@@ -142,14 +130,6 @@ const deleteUser = async (req, res) => {
     }
 };
 
-const deleteMe = async (req, res) => {
-
-    await User.findByIdAndUpdate(req.user.id, { active: false });
-    res.status(204).json({
-        status: "success",
-        data: null
-    });
-}
 
 const getUserFriends = async (req, res) => {
     const user = await User.findById(req.params.userId);
@@ -233,11 +213,10 @@ const getPostLikes = async (req, res) => {
 
 module.exports = {
     getUser, getAllUsers,
-    topUsers, deleteMe,
+    topUsers,
     searchUser, updateUser,
     updateUserDesc, deleteUser,
     getUserFriends, followUser,
     unfollowUser, getPostLikes,
-    authenticateUser,
-
+    authenticateUser
 };
