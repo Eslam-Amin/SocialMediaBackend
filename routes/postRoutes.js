@@ -8,7 +8,8 @@ const catchAsync = require("./../utils/catchAsync")
 router.route("/")
     .get(authController.protect,
         catchAsync(postController.getAllPosts))
-    .post(authController.protect,
+    .post(
+        authController.protect,
         catchAsync(postController.createPost))
 
 router.route("/:id")

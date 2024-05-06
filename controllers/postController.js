@@ -39,13 +39,11 @@ const getPost = async (req, res, next) => {
 const getTimelinePosts = async (req, res) => {
     const currentUser = await User.findById(req.params.userId);
     const users = [req.params.userId, ...currentUser.followings]
-
-
+    console.log(req.headers.cookie)
     const features = new APIFeatures(Post.find({ userId: { $in: users } }), req.query)
         .paginate()
         .sort()
     const posts = await features.query;
-
     //let posts = await Post.find({ userId: { $in: users } }).sort("-createdAt");
     // const friendPosts = await Promise.all(
     //     currentUser.followings.map(friendId => {
@@ -63,7 +61,6 @@ const getTimelinePosts = async (req, res) => {
 
 
 const getUserPosts = async (req, res) => {
-
     const user = await User.findOne({ username: req.params.username });
     const features = new APIFeatures(Post.find({ userId: user._id }), req.query)
         .paginate()
