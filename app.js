@@ -23,7 +23,7 @@ const globalErrorHandler = require("./controllers/errorController")
 const app = express();
 
 const corsOptions = {
-    origin: '*',//(https://your-client-app.com)
+    origin: true,//(https://your-client-app.com)
     methods: ['GET', 'PUT', 'POST', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token'],
     credentials: true,
@@ -52,12 +52,6 @@ app.use(hpp())
 // })
 
 // app.use(cors({ credentials: true, origin: true }));
-
-const corsConfig = {
-  origin: true,
-  credentials: true,
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
 
 app.use(cors(corsOptions));
 app.options("*", cors(corsOptions));
