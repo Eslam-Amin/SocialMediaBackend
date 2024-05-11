@@ -8,7 +8,7 @@ const xss = require("xss-clean")
 const hpp = require("hpp")
 
 
-const rateLimit = require("express-rate-limit")
+// const rateLimit = require("express-rate-limit")
 
 const userRouter = require("./routes/userRoutes");
 const authRouter = require("./routes/authRoutes");
@@ -45,11 +45,11 @@ app.use(xss())
 //Prevent parameter pollution
 app.use(hpp())
 
-const limiter = rateLimit({
-    max: 1000,
-    windowMs: 60 * 60 * 1000,
-    message: "Too many requests fromt this IP, please try again in an hour!"
-})
+// const limiter = rateLimit({
+//     max: 1000,
+//     windowMs: 60 * 60 * 1000,
+//     message: "Too many requests fromt this IP, please try again in an hour!"
+// })
 
 // app.use(cors({ credentials: true, origin: true }));
 app.use(cors({ credentials: true, origin: true }));
