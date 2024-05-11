@@ -27,13 +27,6 @@ const corsOptions = {
     methods: ['GET', 'PUT', 'POST', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token'],
     credentials: true,
-    headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': '*',
-        'Access-Control-Allow-Credentials': 'true'
-    }
-
-
 };
 
 //Data Sanitization against noSql Query injection
