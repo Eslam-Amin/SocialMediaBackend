@@ -52,8 +52,14 @@ app.use(hpp())
 // })
 
 // app.use(cors({ credentials: true, origin: true }));
-app.use(cors({ credentials: true, origin: true }));
 
+const corsConfig = {
+  origin: true,
+  credentials: true,
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsConfig));
 
 
 //middleware
