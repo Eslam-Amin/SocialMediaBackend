@@ -24,6 +24,7 @@ const createSendToken = (user, statusCode, res) => {
         expires: new Date(Date.now() +
             process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
         httpOnly: true,
+        sameSite: 'none',
 
     }
 
@@ -82,10 +83,10 @@ const login = catchAsync(async (req, res, next) => {
 
 const protect = catchAsync(async (req, res, next) => {
     //let token = null;
+    console.log(req.headers)
     let cookie = req.headers.cookie?.split("=")
     let tokenIndex = cookie.indexOf("jwt") + 1;
     let token = cookie[tokenIndex];
-    console.log(cookie, token)
     // if (req.headers.authorization &&
     //     req.headers.authorization.startsWith("Bearer"))
     //     token = req.headers.authorization.split(" ")[1];
