@@ -19,6 +19,27 @@ const signToken = id => {
     )
 }
 
+const createSendToken = (user, statusCode, res) => {
+    const cookieOptions = {
+        expires: new Date(Date.now() +
+            process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
+        httpOnly: true,
+
+    }
+
+    if (process.env.NODE_ENV === "production")
+        cookieOptions.secure = true;
+
+    const token = signToken(user._id);
+    res.cookie("jwt", token, cookieOptions)
+    res.status(statusCode).json({
+        status: "success",
+        token,
+        user
+    })
+}
+
+
 const register = catchAsync(async (req, res) => {
 
     //create new user
@@ -35,22 +56,16 @@ const register = catchAsync(async (req, res) => {
         passwordChangedAt: req.body.passwordChangedAt,
 
     });
-
+    user.password = undefined;
     //save user and return respond
     const user = await newUser.save();
-    const token = signToken(user._id)
-    res.status(201).json({
-        status: "success",
-        data: {
-            user,
-            token
-        }
-    });
+
+    createSendToken(user, 201, res)
+
 })
 
 const login = catchAsync(async (req, res, next) => {
     const { email, password } = req.body;
-    console.log(email, password)
     if (!email || !password)
         return next(new AppError("please Provide email or password", 401))
 
@@ -58,24 +73,20 @@ const login = catchAsync(async (req, res, next) => {
 
     if (!user || !await user.validPassword(password, user.password))
         return next(new AppError("Either mail or password is INVALID", 401))
-
-    const token = signToken(user._id)
+    req.headers.authorization = "Bearer " + signToken(user._id);
     user.password = undefined
-    res.status(200).json({
-        status: "success",
-        data: {
-            token,
-            user
-        }
-    });
+    createSendToken(user, 200, res, req)
+
 })
 
 
 const protect = catchAsync(async (req, res, next) => {
-    let token = null;
-    if (req.headers.authorization &&
-        req.headers.authorization.startsWith("Bearer"))
-        token = req.headers.authorization.split(" ")[1];
+    //let token = null;
+    let token = req.headers.cookie.split("=")[1]
+    // console.log(token)
+    // if (req.headers.authorization &&
+    //     req.headers.authorization.startsWith("Bearer"))
+    //     token = req.headers.authorization.split(" ")[1];
     if (token === "null")
         return next(new AppError("you're not loggedIn, Please Login to get access", 401))
     const decoded = jwt.verify(token, process.env.JWT_SEC)
