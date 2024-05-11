@@ -22,8 +22,7 @@ const userSchema = new mongoose.Schema({
         required: [true, "email is required"],
         unique: true,
         max: 50,
-        lowercase: true,
-        select: false
+        lowercase: true
     },
     password: {
         type: String,
@@ -31,6 +30,17 @@ const userSchema = new mongoose.Schema({
         min: 6,
         select: false
     },
+    // confirmedPassword: {
+    //     type: String,
+    //     required: [true, "Please confirm your Password"],
+    //     validate: {
+    //         //this only works on SAVE!! and CREATE!! 
+    //         validator: function (el) {
+    //             return this.password === el
+    //         },
+    //         message: "Passwords aren't the same!!"
+    //     },
+    // },
     profilePicture: {
         type: String,
         default: "",
@@ -82,12 +92,7 @@ const userSchema = new mongoose.Schema({
         default: Date.now()
     },
     passwordResetExpiresAt: Date,
-    passwordResetToken: String,
-    active: {
-        type: Boolean,
-        default: true,
-        select: false
-    }
+    passwordResetToken: String
 },
     { timestamps: true });
 
@@ -136,10 +141,5 @@ userSchema.methods.createPasswordResetToken = function (next) {
     return resetToken;
 }
 
-
-userSchema.pre(/^find/, function (next) {
-    this.find({ active: { $ne: false } })
-    next()
-})
 
 module.exports = mongoose.model("User", userSchema);

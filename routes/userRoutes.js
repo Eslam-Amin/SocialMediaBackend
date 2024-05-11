@@ -13,14 +13,8 @@ router.route("/authenticate-user")
     .get(catchAsync(userController.authenticateUser))
 
 router.route("/top-5-users")
-    .get(
-        authController.protect,
+    .get(authController.protect,
         catchAsync(userController.topUsers))
-
-router.route("/delete-me")
-    .delete(
-        authController.protect,
-        catchAsync(userController.deleteMe))
 
 router.route("/:id")
     .put(authController.protect,
