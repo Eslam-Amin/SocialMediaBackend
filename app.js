@@ -59,8 +59,8 @@ const corsConfig = {
   allowedHeaders: ["Content-Type", "Authorization"],
 };
 
-app.use(cors(corsConfig));
-app.options("*", cors(corsConfig));
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 
 //middleware
