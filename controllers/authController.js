@@ -82,7 +82,7 @@ const login = catchAsync(async (req, res, next) => {
 
 const protect = catchAsync(async (req, res, next) => {
     //let token = null;
-    let cookie = req.headers.cookie.split("=")
+    let cookie = req.headers.cookie?.split("=")
     let tokenIndex = cookie.indexOf("jwt") + 1;
     let token = cookie[tokenIndex];
     // if (req.headers.authorization &&
