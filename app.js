@@ -61,7 +61,7 @@ app.use(express.json())
 app.use(helmet());
 // app.use(morgan("common"));
 app.use(cookieParser())
-app.use("/api", limiter)
+//app.use("/api", limiter)
 
 app.use("/api/v2/users", userRouter);
 app.use("/api/v2/auth", authRouter);
