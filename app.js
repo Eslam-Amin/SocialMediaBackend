@@ -13,7 +13,6 @@ const hpp = require("hpp")
 const userRouter = require("./routes/userRoutes");
 const authRouter = require("./routes/authRoutes");
 const postRouter = require("./routes/postRoutes");
-const homeRouter = require("./routes/homeRoutes");
 
 
 
@@ -64,7 +63,6 @@ app.use(helmet());
 app.use(cookieParser())
 //app.use("/api", limiter)
 
-app.use("/", homeRouter);
 app.use("/api/v2/users", userRouter);
 app.use("/api/v2/auth", authRouter);
 app.use("/api/v2/posts", postRouter);

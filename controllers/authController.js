@@ -27,9 +27,8 @@ const createSendToken = (user, statusCode, res) => {
 
     }
 
-   
-    // if (process.env.NODE_ENV === "production")
-    //     cookieOptions.secure = true;
+    if (process.env.NODE_ENV === "production")
+        cookieOptions.secure = true;
 
     const token = signToken(user._id);
     res.cookie("jwt", token, cookieOptions)
@@ -86,6 +85,7 @@ const protect = catchAsync(async (req, res, next) => {
     let cookie = req.headers.cookie?.split("=")
     let tokenIndex = cookie.indexOf("jwt") + 1;
     let token = cookie[tokenIndex];
+    console.log(cookie, token)
     // if (req.headers.authorization &&
     //     req.headers.authorization.startsWith("Bearer"))
     //     token = req.headers.authorization.split(" ")[1];
