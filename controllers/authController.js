@@ -27,7 +27,6 @@ const createSendToken = (user, statusCode, res) => {
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
     }
-
     const token = signToken(user._id);
     res.cookie("jwt", token, cookieOptions)
     res.status(statusCode).json({
@@ -37,6 +36,17 @@ const createSendToken = (user, statusCode, res) => {
     })
 }
 
+const clearCookie = (req, res, next) => {
+    res.cookie("jwt", "loggedOut", {
+        expires: new Date(Date.now() -
+            process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000)
+    })
+        .json({
+            status: "success",
+            message: "cookies are cleared"
+        })
+    next();
+}
 
 const register = catchAsync(async (req, res) => {
 
@@ -80,15 +90,17 @@ const login = catchAsync(async (req, res, next) => {
 
 const protect = catchAsync(async (req, res, next) => {
     //let token = null;
-    console.log(req.headers)
+    if (!req.headers.cookie)
+        return next(new AppError("you're not logged In, Please Login to get access", 401))
+
     let cookie = req.headers.cookie?.split("=")
-    let tokenIndex = cookie.indexOf("jwt") + 1;
+    let tokenIndex = cookie?.indexOf("jwt") + 1;
     let token = cookie[tokenIndex];
     // if (req.headers.authorization &&
     //     req.headers.authorization.startsWith("Bearer"))
     //     token = req.headers.authorization.split(" ")[1];
     if (token === "null")
-        return next(new AppError("you're not loggedIn, Please Login to get access", 401))
+        return next(new AppError("you're not logged In, Please Login to get access", 401))
     const decoded = jwt.verify(token, process.env.JWT_SEC)
 
     const currentUser = await User.findById(decoded.id);
@@ -184,4 +196,4 @@ const restrictTo = (...roles) => {
     }
 }
 
-module.exports = { register, login, protect }
+module.exports = { register, login, protect, clearCookie }

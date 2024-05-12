@@ -30,8 +30,9 @@ const corsOptions = {
         'Access-Control-Allow-Methods': 'POST, GET, PATCH, PUT, DELETE',
         'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token, Origin, Authorization'
     }
-};
 
+
+};
 
 //Data Sanitization against noSql Query injection
 app.use(mongoSanitize());
@@ -48,9 +49,8 @@ app.use(hpp())
 //     message: "Too many requests fromt this IP, please try again in an hour!"
 // })
 
-// app.use(cors({ credentials: true, origin: true }));
-
 app.use(cors({ credentials: true, origin: true }));
+
 
 
 //middleware
