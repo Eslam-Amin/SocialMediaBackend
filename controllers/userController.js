@@ -55,7 +55,7 @@ const topUsers = async (req, res, next) => {
     const top = users.map((user) => user._id);
 
     const topOnes = await User.find({ _id: { $in: top } })
-        .select("_id username gender name profilePicture")
+        .select("_id username gender name profilePicture isAdmin")
 
     res.status(200).json({
         status: "sucess",

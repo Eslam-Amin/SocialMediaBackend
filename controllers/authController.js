@@ -92,7 +92,6 @@ const protect = catchAsync(async (req, res, next) => {
     //let token = null;
     if (!req.headers.cookie)
         return next(new AppError("you're not logged In, Please Login to get access", 401))
-
     let cookie = req.headers.cookie?.split("=")
     let tokenIndex = cookie?.indexOf("jwt") + 1;
     let token = cookie[tokenIndex];
@@ -111,7 +110,6 @@ const protect = catchAsync(async (req, res, next) => {
     // //check if user changed password after the token was issued;
     // if (currentUser.isPasswordChanged(decoded.iat))
     //     return next(new AppError("The User Recently changed his password! Please Login Again.", 401))
-
 
     req.user = currentUser;
     next();
