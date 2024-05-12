@@ -23,18 +23,15 @@ const globalErrorHandler = require("./controllers/errorController")
 const app = express();
 
 const corsOptions = {
-    origin: '*',//(https://your-client-app.com)
-    methods: ['GET', 'PUT', 'POST', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization', 'x-csrf-token'],
+    origin: true,//(https://your-client-app.com)
     credentials: true,
     headers: {
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Headers': '*',
-        'Access-Control-Allow-Credentials': 'true'
+        'Access-Control-Allow-Methods': 'POST, GET, PATCH, PUT, DELETE',
+        'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token, Origin, Authorization'
     }
-
-
 };
+
 
 //Data Sanitization against noSql Query injection
 app.use(mongoSanitize());
@@ -52,8 +49,8 @@ app.use(hpp())
 // })
 
 // app.use(cors({ credentials: true, origin: true }));
-app.use(cors({ credentials: true, origin: true }));
 
+app.use(cors({ credentials: true, origin: true }));
 
 
 //middleware
