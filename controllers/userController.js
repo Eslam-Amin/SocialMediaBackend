@@ -31,27 +31,7 @@ const getUser = async (req, res, next) => {
 };
 
 const topUsers = async (req, res, next) => {
-    // const users = await User.aggregate([
-    //     {
-    //         $unwind: "$followers",
-    //     },
-    //     {
-    //         $group: {
-    //             _id: "$_id",
-    //             size: {
-    //                 $sum: 1,
-    //             },
-    //         },
-    //     },
-    //     {
-    //         $sort: {
-    //             size: -1,
-    //         },
-    //     },
-    //     {
-    //         $limit: 5,
-    //     },
-    // ]);
+
     const users = await User.aggregate([
         {
             $project: {
@@ -75,15 +55,11 @@ const topUsers = async (req, res, next) => {
             $limit: 5
         }
     ]);
-    const top = users.map((user) => user._id);
-
     // const topOnes = await User.find({ _id: { $in: top } })
     //     .select("_id username gender name profilePicture isAdmin")
-
     res.status(200).json({
         status: "sucess",
-        users:
-            top
+        users
     })
 }
 
@@ -124,8 +100,12 @@ const searchUser = async (req, res) => {
 
 
 const updateUser = async (req, res, next) => {
-    if (req.body.userId === req.params.id || req.body.isAdmin) {
+
+    if (req.user._id === req.params.id || req.body.isAdmin) {
         const user = await User.findById(req.body.userId).select("+password");
+        if (req.file)
+            req.body.profilePicture = req.file.filename;
+        console.log(req.body)
         if (req.body.password) {
             const validPassword = await bcrypt.compare(req.body.password, user.password);
             if (!validPassword) {
