@@ -31,36 +31,59 @@ const getUser = async (req, res, next) => {
 };
 
 const topUsers = async (req, res, next) => {
+    // const users = await User.aggregate([
+    //     {
+    //         $unwind: "$followers",
+    //     },
+    //     {
+    //         $group: {
+    //             _id: "$_id",
+    //             size: {
+    //                 $sum: 1,
+    //             },
+    //         },
+    //     },
+    //     {
+    //         $sort: {
+    //             size: -1,
+    //         },
+    //     },
+    //     {
+    //         $limit: 5,
+    //     },
+    // ]);
     const users = await User.aggregate([
         {
-            $unwind: "$followers",
-        },
-        {
-            $group: {
-                _id: "$_id",
-                size: {
-                    $sum: 1,
-                },
-            },
+            $project: {
+                name: 1,
+                username: 1,
+                profilePicture: 1,
+                _id: 1,
+                isAdmin: 1,
+                gender: 1,
+                totalFollowers: {
+                    $size: "$followers"
+                }
+            }
         },
         {
             $sort: {
-                size: -1,
-            },
+                totalFollowers: -1
+            }
         },
         {
-            $limit: 5,
-        },
+            $limit: 5
+        }
     ]);
     const top = users.map((user) => user._id);
 
-    const topOnes = await User.find({ _id: { $in: top } })
-        .select("_id username gender name profilePicture isAdmin")
+    // const topOnes = await User.find({ _id: { $in: top } })
+    //     .select("_id username gender name profilePicture isAdmin")
 
     res.status(200).json({
         status: "sucess",
         users:
-            topOnes
+            top
     })
 }
 
