@@ -13,6 +13,22 @@ const getAllUsers = async (req, res) => {
     res.status(200).json(userMap);
 };
 
+
+const uploadProfilePicture = async (req, res) => {
+    console.log(req.body)
+    let img = req.file.filename;
+    req.body.profilePicture = `${img.split('-')[0].split('_')[1]}/${img}`
+    console.log(req.body.profilePicture)
+    const user = await User.findByIdAndUpdate(req.user._id, { $set: { ...req.body } }, {
+        new: true
+    });
+    res.status(200).json({
+        status: "success",
+        user
+    })
+
+}
+
 const getUser = async (req, res, next) => {
 
     const userId = req.query.userId;
@@ -241,6 +257,6 @@ module.exports = {
     updateUserDesc, deleteUser,
     getUserFriends, followUser,
     unfollowUser, getPostLikes,
-    authenticateUser,
+    authenticateUser, uploadProfilePicture
 
 };

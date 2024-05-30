@@ -5,6 +5,12 @@ const APIFeatures = require("../utils/apiFeatures")
 
 
 const createPost = async (req, res) => {
+    if (req.file) {
+        req.body.img = req.file.filename;
+        //post/1717104343480_post-Ecas.jpg
+        req.body.img = `${req.body.img.split('-')[0].split('_')[1]}/${req.body.img}`
+    }
+    req.body.userId = req.user._id;
     const newPost = new Post(req.body);
     const post = await newPost.save();
     res.status(201).json({
@@ -13,6 +19,7 @@ const createPost = async (req, res) => {
     });
 
 };
+
 
 const getAllPosts = async (req, res) => {
     const features = new APIFeatures(Post.find(), req.query)

@@ -2,57 +2,67 @@ const router = require("express").Router();
 
 const userController = require("../controllers/userController");
 const authController = require("../controllers/authController")
-
+const multerController = require("../utils/multerController")
 const catchAsync = require("./../utils/catchAsync");
-
+router.use(authController.protect)
 router.route("/")
-    .get(authController.protect,
-        catchAsync(userController.getUser))
+    .get(
+        catchAsync(userController.getUser)
+    )
 
 router.route("/authenticate-user")
-    .get(catchAsync(userController.authenticateUser))
+    .get(catchAsync(userController.authenticateUser)
+    )
+router.put("/upload/profilePicture",
+    multerController.uploadUserImage,
+    catchAsync(userController.uploadProfilePicture)
+)
 
 router.route("/top-5-users")
     .get(
-        authController.protect,
-        catchAsync(userController.topUsers))
+        catchAsync(userController.topUsers)
+    )
 
 router.route("/delete-me")
     .delete(
-        authController.protect,
-        catchAsync(userController.deleteMe))
+        catchAsync(userController.deleteMe)
+    )
 
 router.route("/:id")
-    .put(authController.protect,
+    .put(
+        multerController.uploadUserImage,
         catchAsync(userController.updateUser))
-    .delete(authController.protect,
-        catchAsync(userController.deleteUser))
+    .delete(
+        catchAsync(userController.deleteUser)
+    )
 
 router.put("/updateDesc/:id",
-    authController.protect,
     userController.updateUserDesc);
 
 router.get("/search",
-    catchAsync(userController.searchUser))
+    catchAsync(userController.searchUser)
+)
 
 router.get("/postLikes",
-    catchAsync(userController.getPostLikes))
+    catchAsync(userController.getPostLikes)
+)
+
 
 // router.get("/", userController.getAllUsers)
 
 //get user's friend 
 router.get("/friends/:userId",
-    authController.protect,
-    catchAsync(userController.getUserFriends))
+    catchAsync(userController.getUserFriends)
+)
 
 //follow a user
 router.put("/:id/follow",
-    authController.protect,
-    catchAsync(userController.followUser))
-
+    catchAsync(userController.followUser)
+)
 //unfollow a user
 router.put("/:id/unfollow",
-    catchAsync(userController.unfollowUser))
+    catchAsync(userController.unfollowUser)
+)
 
 
 

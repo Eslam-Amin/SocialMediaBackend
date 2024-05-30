@@ -1,3 +1,4 @@
+const path = require("path")
 const express = require("express");
 const helmet = require("helmet");
 const morgan = require('morgan');
@@ -21,7 +22,11 @@ const globalErrorHandler = require("./controllers/errorController")
 
 
 const app = express();
-
+app.use(express.urlencoded({ extended: true }))
+//S: \Eca'sSources\Projects\SocialMedia\client\public
+//client\public\assets
+app.use(express.static(path.join(__dirname, "public/images/users")))
+app.use(express.static("../client/public/assets/post"))
 const corsOptions = {
     origin: true,//(https://your-client-app.com)
     credentials: true,
