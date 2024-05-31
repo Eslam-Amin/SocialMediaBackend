@@ -25,8 +25,8 @@ const app = express();
 app.use(express.urlencoded({ extended: true }))
 //S: \Eca'sSources\Projects\SocialMedia\client\public
 //client\public\assets
-app.use(express.static(path.join(__dirname, "public/images/users")))
-app.use(express.static("../client/public/assets/post"))
+app.use(express.static(path.resolve(__dirname, "client/public/assets/person")))
+app.use(express.static(path.resolve(__dirname, "client/public/assets/post")))
 const corsOptions = {
     origin: true,//(https://your-client-app.com)
     credentials: true,
