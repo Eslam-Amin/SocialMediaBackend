@@ -23,12 +23,10 @@ const globalErrorHandler = require("./controllers/errorController")
 
 const app = express();
 app.use(express.urlencoded({ extended: true }))
-//http://localhost:3000/images/folder1/image1.jpg
-// app.use(express.static(path.join(__dirname, "public")))
-// app.use(express.static(path.join(__dirname, "public/images")))
-// app.use(express.static(path.join(__dirname, "public/images/posts")))
-app.use('/public', express.static(path.join(__dirname, 'public')));
-
+//S: \Eca'sSources\Projects\SocialMedia\client\public
+//client\public\assets
+app.use(express.static("https://social-media-network.netlify.app/assets/post"))
+app.use(express.static("https://social-media-network.netlify.app/assets/person"))
 const corsOptions = {
     origin: true,//(https://your-client-app.com)
     credentials: true,

@@ -15,7 +15,7 @@ const getAllUsers = async (req, res) => {
 
 
 const uploadProfilePicture = async (req, res) => {
-    console.log(req.file)
+    console.log(req.body)
     let img = req.file.filename;
     req.body.profilePicture = `${img.split('-')[0].split('_')[1]}/${img}`
     console.log(req.body.profilePicture)
