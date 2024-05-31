@@ -12,7 +12,7 @@ const multerStorage = (entity) => {
         }
     });
 }
-const publicFolder = "../client/public/assets"
+const publicFolder = "public/images"
 
 //multer will only accepts image 
 //using mimetype image/imageExtension
