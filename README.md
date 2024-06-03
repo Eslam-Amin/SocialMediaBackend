@@ -68,6 +68,9 @@ Welcome to the Social Network Backend Server repository. This server provides th
   - `GET /posts/timeline`
   - Retrieves posts for the user's timeline based on who they are following.
 
+- **Uploading Pictures:**
+  - Implement functionality to allow users to upload pictures with their posts.
+
 ## Authentication
 
 - **Login**
@@ -130,9 +133,6 @@ This server has been deployed to Render.com. You can access it through this repo
 ## Future Work
 
 To enhance the project further, consider the following:
-
-- **Uploading Pictures:**
-  - Implement functionality to allow users to upload pictures with their posts.
   
 - **Real-time Chatting:**
   - Integrate real-time chat functionality using Socket.io.
