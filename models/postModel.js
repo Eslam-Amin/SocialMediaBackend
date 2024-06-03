@@ -2,9 +2,10 @@ const mongoose = require("mongoose");
 
 
 const postSchema = new mongoose.Schema({
-    userId: {
-        type: String,
-        required: [true, "please provide post userid"]
+    user: {
+        type: mongoose.Schema.ObjectId,
+        ref: "User",
+        required: [true, "please provide post user"]
     },
     content: {
         type: String,
@@ -14,13 +15,18 @@ const postSchema = new mongoose.Schema({
         type: String,
         default: ""
     },
-    likes: {
-        type: Array,
-        default: []
-    },
-    createdAt: Date
+    // numOfLikes: {
+    //     type: Number,
+    //     default: 0
+    // },
+    // numOfComments: {
+    //     type: Number,
+    //     default: 0
+    // }
+    //createdAt: Date
 },
     {
+        timestamps: true,
         toJSON: {
             virtuals: true
         },
@@ -28,13 +34,39 @@ const postSchema = new mongoose.Schema({
             virtuals: true
         }
     },
-    { timestamps: true });
+);
 
 
 postSchema.virtual("numOfLikes")
     .get(function () {
-        return this.likes.length
+        return this.likes?.length || 0
     });
+
+postSchema.virtual("numOfComments")
+    .get(function () {
+        return this.comments?.length || 0
+    });
+
+postSchema.pre(/^find/, function (next) {
+    // this.populate({
+    //     path: "user",
+    //     select: "name username _id profilePicture gender"
+    // }).populate("likes")
+    next()
+})
+
+//virtual Populate
+postSchema.virtual("likes", {
+    ref: "Likes",
+    foreignField: "post",
+    localField: "_id"
+});
+postSchema.virtual("comments", {
+    ref: "Comments",
+    foreignField: "post",
+    localField: "_id"
+});
+
 
 
 module.exports = mongoose.model("Post", postSchema);

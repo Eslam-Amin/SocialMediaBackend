@@ -4,7 +4,7 @@ const jwt = require("jsonwebtoken");
 
 const AppError = require("./../utils/appError")
 const catchAsync = require("./../utils/catchAsync");
-
+const generateHTML = require("./../utils/generateHTML")
 const sendEmail = require("./../utils/email")
 
 const signToken = id => {
@@ -31,13 +31,12 @@ const createSendToken = (user, statusCode, res) => {
     res.cookie("jwt", token, cookieOptions)
     res.status(statusCode).json({
         status: "success",
-        token,
         user
     })
 }
 
 const clearCookie = (req, res, next) => {
-    res.cookie("jwt", "loggedOut", {
+    return res.cookie("jwt", "loggedOut", {
         expires: new Date(Date.now() -
             process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000)
     })
@@ -45,7 +44,6 @@ const clearCookie = (req, res, next) => {
             status: "success",
             message: "cookies are cleared"
         })
-    next();
 }
 
 const register = catchAsync(async (req, res) => {
@@ -95,21 +93,20 @@ const protect = catchAsync(async (req, res, next) => {
     let cookie = req.headers.cookie?.split("=")
     let tokenIndex = cookie?.indexOf("jwt") + 1;
     let token = cookie[tokenIndex];
-    // if (req.headers.authorization &&
-    //     req.headers.authorization.startsWith("Bearer"))
-    //     token = req.headers.authorization.split(" ")[1];
+
     if (token === "null")
         return next(new AppError("you're not logged In, Please Login to get access", 401))
     const decoded = jwt.verify(token, process.env.JWT_SEC)
-
-    const currentUser = await User.findById(decoded.id);
+    const currentUser = await User.findById(decoded.id).select("name username gender passwordChangedAt profilePicture");
 
     if (!currentUser)
         return next(new AppError("The user belgons to this token is no longer exist", 401));
-
-    // //check if user changed password after the token was issued;
-    // if (currentUser.isPasswordChanged(decoded.iat))
-    //     return next(new AppError("The User Recently changed his password! Please Login Again.", 401))
+    const changed = currentUser.isPasswordChanged(decoded.iat);
+    // console.log("password changed? in authController.protect ", changed)
+    //check if user changed password after the token was issued;
+    if (currentUser.isPasswordChanged(decoded.iat))
+        return next(new AppError("The User Recently changed his password! Please Login Again.", 401))
+    currentUser.passwordChangedAt = undefined;
     req.user = currentUser;
     next();
 
@@ -119,26 +116,40 @@ const protect = catchAsync(async (req, res, next) => {
 const forgotPassowrd = catchAsync(async (req, res, next) => {
     //get user based on POSTed Email
     const user = await User.findOne({ email: req.body.email });
-
     if (!user)
-        next(new AppError("there is no user with this email", 404))
-
+        return res.status(200).json({
+            status: "success",
+            message: "token sent to email!"
+        })
     //generate the random reset Token
     const resetToken = user.createPasswordResetToken();
     await user.save({ runValidators: false });
-
     //send it the user's email
-    const resetURL = `${req.protocol}://${req.get("host")}/api/users/reset-password/${resetToken}`;
-
-    const message = `forgot your password? submit a PATCH 
+    // const resetURL = `${req.protocol}://${req.get("host")}/api/users/reset-password/${resetToken}`;
+    const resetURL = `${process.env.FRONTEND_URL}/auth/reset-password/${resetToken}`;
+    const btnLink =
+        `${req.get("origin")}/auth/reset-password/${resetToken}`;
+    const html = generateHTML({
+        user,
+        link: resetURL,
+        emailTitle: "Verify Your Account",
+        emailSubTitle: "Tap the button below to verify your email address.",
+        btnText: "Verify Account",
+        btnLink: resetURL,
+        belowLink: resetURL,
+        footerNote:
+            "You received this email because you were added as an admin on our website. If you did not initiate this action, please ignore this email.",
+    });
+    const message = `forgot your password? submit a POST 
     reqtuest with your new password and passsword confirtm to: ${resetURL}
     \n and if you didn't forget your password, please ignore this email!`
     try {
-
         await sendEmail({
-            email: user.email,
+            email: req.body.email,
             subject: "reset your password token (valid for  10min)",
-            message
+            message,
+            html,
+
         })
 
         res.status(200).json({
@@ -147,6 +158,7 @@ const forgotPassowrd = catchAsync(async (req, res, next) => {
         })
     }
     catch (err) {
+        console.log(err, " in authController.161")
         user.passwordResetToken = undefined
         user.passwordResetExpiresAt = undefined
         await user.save({ validateBeforeSave: false });
@@ -172,14 +184,17 @@ const resetPassword = catchAsync(async (req, res, next) => {
         return next(new AppError("token is invalid or has expired", 300))
     user.password = req.body.password;
     user.passwordResetToken = undefined;
-    user.passwordResetExpiresAt = undifined;
+    user.passwordResetExpiresAt = undefined;
+    user.passwordChangedAt = Date.now()
     await user.save();
 
     const token = signToken(user._id);
-    res.status(200).json({
-        status: "success",
-        token
-    })
+    user.passwordChangedAt = undefined
+    user.password = undefined
+    user.createdAt = undefined
+    user.updatedAt = undefined
+
+    createSendToken(user, 200, res, req)
 })
 
 
@@ -193,4 +208,8 @@ const restrictTo = (...roles) => {
     }
 }
 
-module.exports = { register, login, protect, clearCookie }
+module.exports = {
+    register, login,
+    protect, clearCookie,
+    forgotPassowrd, resetPassword
+}

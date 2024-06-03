@@ -23,10 +23,12 @@ const globalErrorHandler = require("./controllers/errorController")
 
 const app = express();
 app.use(express.urlencoded({ extended: true }))
-//S: \Eca'sSources\Projects\SocialMedia\client\public
-//client\public\assets
-app.use(express.static("https://social-media-network.netlify.app/assets/post"))
-app.use(express.static("https://social-media-network.netlify.app/assets/person"))
+//http://localhost:3000/images/folder1/image1.jpg
+// app.use(express.static(path.join(__dirname, "public")))
+// app.use(express.static(path.join(__dirname, "public/images")))
+// app.use(express.static(path.join(__dirname, "public/images/posts")))
+app.use('/public', express.static(path.join(__dirname, 'public')));
+
 const corsOptions = {
     origin: true,//(https://your-client-app.com)
     credentials: true,
@@ -65,9 +67,9 @@ app.use(helmet());
 app.use(cookieParser())
 //app.use("/api", limiter)
 
-app.use("/api/v2/users", userRouter);
-app.use("/api/v2/auth", authRouter);
-app.use("/api/v2/posts", postRouter);
+app.use("/api/v3/users", userRouter);
+app.use("/api/v3/auth", authRouter);
+app.use("/api/v3/posts", postRouter);
 
 //Redirect unknown Errors
 app.all("*", (req, res, next) => {

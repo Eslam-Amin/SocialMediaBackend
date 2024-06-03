@@ -39,14 +39,6 @@ const userSchema = new mongoose.Schema({
         type: String,
         default: "",
     },
-    followers: {
-        type: Array,
-        default: []
-    },
-    followings: {
-        type: Array,
-        default: []
-    },
     isAdmin: {
         type: Boolean,
         default: false,
@@ -88,8 +80,16 @@ const userSchema = new mongoose.Schema({
         default: true,
         select: false
     }
+}, {
+    toJSON: {
+        virtuals: true
+    },
+    toObject: {
+        virtuals: true
+    }
 },
     { timestamps: true });
+
 
 //runs on changing the password
 userSchema.pre("save", function (next) {
@@ -116,10 +116,12 @@ userSchema.methods.validPassword = async function (candidatePassword, userPasswo
 
 //checks if password has changed after the token was issued
 userSchema.methods.isPasswordChanged = function (JwtTimestamp) {
+
     if (!this.passwordChangedAt)
         //password didn't change
         return false
     const changedTimestamp = parseInt(this.passwordChangedAt.getTime() / 1000, 10)
+    //console.log(JwtTimestamp, changedTimestamp)
     return JwtTimestamp < changedTimestamp
 
 }
@@ -141,5 +143,21 @@ userSchema.pre(/^find/, function (next) {
     this.find({ active: { $ne: false } })
     next()
 })
+
+
+//virtual Populate
+userSchema.virtual("followers", {
+    ref: "Friends",
+    foreignField: "user",
+    localField: "_id"
+});
+
+//virtual Populate
+userSchema.virtual("followings", {
+    ref: "Friends",
+    foreignField: "userFollowed",
+    localField: "_id"
+});
+
 
 module.exports = mongoose.model("User", userSchema);

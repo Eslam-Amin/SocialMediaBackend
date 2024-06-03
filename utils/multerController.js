@@ -12,7 +12,7 @@ const multerStorage = (entity) => {
         }
     });
 }
-const publicFolder = "../client/public/assets"
+const publicFolder = "public/images"
 
 //multer will only accepts image 
 //using mimetype image/imageExtension
@@ -32,7 +32,7 @@ const uploadUserImageConfiguration = multer({
 
 
 const uploadPostImageConfiguration = multer({
-    storage: multerStorage("post"),
+    storage: multerStorage("posts"),
     fileFilter: multerFilter
 })
 

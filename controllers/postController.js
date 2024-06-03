@@ -1,5 +1,8 @@
 const User = require("../models/userModel")
 const Post = require("../models/postModel");
+const Likes = require("../models/likesModel");
+const Comments = require("../models/commentsModel");
+const Followers = require("../models/followersModel");
 const AppError = require("../utils/appError");
 const APIFeatures = require("../utils/apiFeatures")
 
@@ -10,12 +13,16 @@ const createPost = async (req, res) => {
         //post/1717104343480_post-Ecas.jpg
         req.body.img = `${req.body.img.split('-')[0].split('_')[1]}/${req.body.img}`
     }
-    req.body.userId = req.user._id;
+    req.body.user = req.user._id;
     const newPost = new Post(req.body);
     const post = await newPost.save();
+    post.user = req.user
+
+
     res.status(201).json({
         status: "success",
-        post
+        post,
+
     });
 
 };
@@ -33,7 +40,7 @@ const getAllPosts = async (req, res) => {
 };
 
 const getPost = async (req, res, next) => {
-    const post = await Post.findById(req.params.id).select("-__v -updatedAt");
+    const post = await Post.findById(req.params.id).select("-__v -updatedAt")
     if (!post)
         return next(new AppError("The post not found", 404));
     res.status(200).json({
@@ -43,32 +50,59 @@ const getPost = async (req, res, next) => {
 };
 
 
-const getTimelinePosts = async (req, res) => {
-    const currentUser = await User.findById(req.params.userId);
-    const users = [req.params.userId, ...currentUser.followings]
-    const features = new APIFeatures(Post.find({ userId: { $in: users } }), req.query)
+const getTimelinePosts = async (req, res, next) => {
+    // const currentUser = await User.findById(req.params.id);
+    // const followers = await Followers.find({ follower: req.params.id })
+    const followers = await Followers.find({ follower: req.user.id }).select("user -_id")
+    const users = [req.user._id, ...followers.map((follower) => follower.user)]
+
+    const features = new APIFeatures(Post.find({ user: { $in: users } })
+        .populate({
+            path: "user",
+            select: "name username _id profilePicture gender isAdmin"
+        })
+        .populate({
+            path: "likes",
+            select: "user -post -_id"
+        })
+        .populate({
+            path: "comments",
+            select: "comment -post -_id"
+        })
+        , req.query)
         .paginate()
         .sort()
     const posts = await features.query;
-    //let posts = await Post.find({ userId: { $in: users } }).sort("-createdAt");
-    // const friendPosts = await Promise.all(
-    //     currentUser.followings.map(friendId => {
-    //         return Post.find({ userId: friendId }).select("-__v -updatedAt");
-    //     })
-    // );
-    // let posts = userPosts.concat(...friendPosts);
+
+    if (posts.length === 0)
+        return res.status(200).json({
+            status: "success",
+            message: "There are no posts to be shown"
+        })
 
     res.status(200).json({
         status: "success",
         result: posts.length,
-        posts
+        posts,
     });
 };
 
 
-const getUserPosts = async (req, res) => {
+const getProfilePosts = async (req, res) => {
     const user = await User.findOne({ username: req.params.username });
-    const features = new APIFeatures(Post.find({ userId: user._id }), req.query)
+
+    const features = new APIFeatures(Post.find({ user: user._id })
+        .populate({
+            path: "user",
+            select: "name username _id profilePicture gender isAdmin"
+        }).populate({
+            path: "likes",
+            select: "user -post -_id"
+        }).populate({
+            path: "comments",
+            select: "comment -post -_id"
+        })
+        , req.query)
         .paginate()
         .sort()
     const posts = await features.query;
@@ -83,7 +117,7 @@ const getUserPosts = async (req, res) => {
 
 const updatePost = async (req, res) => {
     const post = await Post.findById(req.params.id);
-    if (post.userId === req.body.userId) {
+    if (post.user.toString() === req.user._id.toString()) {
         await post.updateOne({ $set: req.body });
         res.status(200).json({
             stats: "success",
@@ -102,9 +136,12 @@ const updatePost = async (req, res) => {
 
 const deletePost = async (req, res) => {
     const post = await Post.findById(req.params.id);
+
     if (post) {
-        if (post.userId === req.body.userId) {
+        if (post.user.toString() === req.user._id.toString()) {
             await post.deleteOne({ $set: req.body });
+            await Comments.deleteMany({ post: req.params.id })
+            await Likes.deleteMany({ post: req.params.id })
             res.status(204).json({
                 status: "success",
             })
@@ -126,21 +163,28 @@ const deletePost = async (req, res) => {
 };
 
 const postReaction = async (req, res, next) => {
-    const post = await Post.findById(req.params.id);
-    if (!post) return next(new AppError("post not found", 404))
+    const post = await Post.findById(req.params.id)
+    if (!post)
+        return next(new AppError("Post Not Found", 404))
 
-    if (!post.likes.includes(req.body.userId)) {
-        await post.updateOne({ $push: { likes: req.body.userId } });
-        res.status(200).json({
+    let likes = await Likes.findOne({ post: req.params.id, user: req.user._id })
+    if (!likes) {
+        post.numOfLikes = post.numOfLikes + 1;
+        likes = await Likes.create({ user: req.user._id, post: req.params.id })
+        await post.save()
+        res.status(201).json({
             status: "success",
             message: "the Post Has been Liked"
-        });
-    } else {
-        await post.updateOne({ $pull: { likes: req.body.userId } });
-        res.status(200).json({
+        })
+    }
+    else {
+        await Likes.findByIdAndDelete(likes._id)
+        post.numOfLikes = post.numOfLikes - 1;
+        await post.save()
+        res.status(204).json({
             status: "success",
-            message: "the Post Has been disiked"
-        });
+            data: null
+        })
     }
 };
 
@@ -149,17 +193,16 @@ const getPostLikes = async (req, res, next) => {
     const post = await Post.findById(req.params.postId);
     if (!post) return next(new AppError("post not found", 404))
 
-    const users = await Promise.all(
-        post.likes.map(async userLikeId => {
-            const userLikesId = await User.findById(userLikeId).select("_id username profilePicture gender name")
-            return userLikesId;
-        })
-    )
+    let likes = await Likes.find({ post: req.params.postId }).select("user -_id").populate({
+        path: "user",
+        select: "name username profilePicture _id gender isAdmin"
+    });
+    likes = likes.map((like) => like.user)
 
     res.status(200).json({
         status: "success",
-        result: users.length,
-        users
+        result: likes.length,
+        likes
     })
 
 };
@@ -169,5 +212,5 @@ const getPostLikes = async (req, res, next) => {
 module.exports = {
     createPost, updatePost, deletePost,
     postReaction, getPost, getAllPosts,
-    getTimelinePosts, getUserPosts, getPostLikes
+    getTimelinePosts, getProfilePosts, getPostLikes
 }

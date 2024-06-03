@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/userModel")
+const Followers = require("../models/followersModel")
 const AppError = require("./../utils/appError")
 const jwt = require("jsonwebtoken")
 
@@ -15,7 +16,7 @@ const getAllUsers = async (req, res) => {
 
 
 const uploadProfilePicture = async (req, res) => {
-    console.log(req.body)
+    console.log(req.file)
     let img = req.file.filename;
     req.body.profilePicture = `${img.split('-')[0].split('_')[1]}/${img}`
     console.log(req.body.profilePicture)
@@ -48,29 +49,43 @@ const getUser = async (req, res, next) => {
 
 const topUsers = async (req, res, next) => {
 
-    const users = await User.aggregate([
+    const users = await Followers.aggregate([
         {
-            $project: {
-                name: 1,
-                username: 1,
-                profilePicture: 1,
-                _id: 1,
-                isAdmin: 1,
-                gender: 1,
-                totalFollowers: {
-                    $size: "$followers"
-                }
+            $group: {
+                _id: "$user",
+                totalFollowers: { $sum: 1 }
             }
         },
         {
-            $sort: {
-                totalFollowers: -1
-            }
+            $sort: { totalFollowers: -1 }
         },
         {
             $limit: 5
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "_id",
+                foreignField: "_id",
+                as: "userDetails"
+            }
+        },
+        {
+            $unwind: "$userDetails"
+        },
+        {
+            $project: {
+                _id: "$userDetails._id",
+                name: "$userDetails.name",
+                username: "$userDetails.username",
+                totalFollowers: 1,
+                profilePicture: "$userDetails.profilePicture",
+                gender: "$userDetails.gender",
+                isAdmin: "$userDetails.isAdmin"
+            }
         }
     ]);
+
     // const topOnes = await User.find({ _id: { $in: top } })
     //     .select("_id username gender name profilePicture isAdmin")
     res.status(200).json({
@@ -81,24 +96,10 @@ const topUsers = async (req, res, next) => {
 
 const authenticateUser = async (req, res, next) => {
     // const token = req.headers.authorization.split(" ")[1];
-    let token = "";
-    if (req.headers.authorization
-        && req.headers.authorization.startsWith("Bearer")) {
-        token = req.headers.authorization.split(" ")[1];
-    }
-    if (!token)
-        return next(new AppError(
-            "You're not Logged in! Please Log in to get Access", 401
-        ));
-
-    const decoded = jwt.verify(token, process.env.JWT_SEC);
-    const user = await User.findById(decoded.id).select("-password -passwordChangedAt -createdAt -updatedAt -__v");
-    if (!user)
-        return next(new AppError(`No User Found with That username or id`, 404))
 
     res.status(200).json({
         status: "success",
-        user
+        user: req.user
     });
 
 };
@@ -116,12 +117,10 @@ const searchUser = async (req, res) => {
 
 
 const updateUser = async (req, res, next) => {
-
-    if (req.user._id === req.params.id || req.body.isAdmin) {
+    if (req.user._id.toString() === req.params.id.toString() || req.body.isAdmin) {
         const user = await User.findById(req.body.userId).select("+password");
         if (req.file)
             req.body.profilePicture = req.file.filename;
-        console.log(req.body)
         if (req.body.password) {
             const validPassword = await bcrypt.compare(req.body.password, user.password);
             if (!validPassword) {
@@ -170,53 +169,64 @@ const deleteMe = async (req, res) => {
     });
 }
 
-const getUserFriends = async (req, res) => {
+const getUserFollowers = async (req, res, next) => {
     const user = await User.findById(req.params.userId);
-    const friends = await Promise.all(
-        user.followers.map(async friendId => {
-            const userFollower = await User.findById(friendId)
-            return userFollower;
-        })
-    )
-    let friendsList = [];
-    friends.map(friend => {
-        const { _id, username, profilePicture, name, gender } = friend;
-        friendsList.push({ _id, username, profilePicture, name, gender });
-    })
+    if (!user)
+        return next(new AppError("User Not Found", 404))
+    let followers = await Followers.find({ user: req.params.userId }).select("follower -_id");
+    followers = followers.map((follower) => follower.follower)
     res.status(200).json({
         status: "success",
-        friendsList
+        result: followers.length,
+        followers
     });
 
 };
 
 
-const followUser = async (req, res) => {
-    if (req.body.userId !== req.params.id) {
+const userInteraction = async (req, res, next) => {
+
+    if (req.user._id !== req.params.id) {
         const user = await User.findById(req.params.id);
-        const currentUser = await User.findById(req.body.userId);
 
-        if (!user.followers.includes(req.body.userId)) {
-
-            await user.updateOne({ $push: { followers: req.body.userId } });
-            user.followers.push(req.body.userId);
-
-            await currentUser.updateOne({ $push: { followings: req.params.id } });
-            currentUser.followings.push(req.params.id);
-
-            res.status(200).json({ msg: "user Has Been Followed", updatedUser: currentUser });
-        } else {
-            res.status(403).json("you already follow this user")
+        if (!user)
+            return next(new AppError("User Not Found!", 404))
+        const isFollower = await Followers.findOne({ user: req.params.id, follower: req.user._id })
+        let follower;
+        if (!isFollower) {
+            follower = await Followers.create({ user: req.params.id, follower: req.user._id });
+            res.status(200).json({
+                status: "success",
+                message: "user has been followed"
+            })
+        }
+        else {
+            await Followers.findOneAndDelete({ user: req.params.id, follower: req.user._id })
+            res.status(204).json({
+                status: "success",
+                message: null
+            })
         }
 
 
     } else {
-        res.status(403).json("you can't follow yourself")
+        return next(new AppError("you can't follow yourself!", 403))
     }
 };
 
 
+const getAllFollowers = async (req, res, next) => {
+    const followers = await Followers.find();
+    res.status(200).json({
+        status: "success",
+        followers
+    })
+}
+
+
+
 const unfollowUser = async (req, res) => {
+    req.body.userId = req.user._id
     if (req.body.userId !== req.params.id) {
         const user = await User.findById(req.params.id);
         const currentUser = await User.findById(req.body.userId);
@@ -239,24 +249,14 @@ const unfollowUser = async (req, res) => {
     }
 };
 
-const getPostLikes = async (req, res) => {
-    const userId = req.query.userId;
-    if (userId) {
-        const user = await User.findById({ _id: userId }, { name: 1, username: 1, _id: 1, profilePicture: 1 });
-
-        user.length !== 0 ? res.status(200).json(user) : res.status(404).json("User Not Found!");
-    }
-
-};
-
 
 module.exports = {
     getUser, getAllUsers,
     topUsers, deleteMe,
     searchUser, updateUser,
     updateUserDesc, deleteUser,
-    getUserFriends, followUser,
-    unfollowUser, getPostLikes,
-    authenticateUser, uploadProfilePicture
+    getUserFollowers,
+    authenticateUser, uploadProfilePicture,
+    userInteraction, getAllFollowers
 
 };

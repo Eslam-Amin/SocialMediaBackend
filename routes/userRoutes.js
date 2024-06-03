@@ -43,25 +43,22 @@ router.get("/search",
     catchAsync(userController.searchUser)
 )
 
-router.get("/postLikes",
-    catchAsync(userController.getPostLikes)
-)
-
+router.get("/followers", catchAsync(userController.getAllFollowers))
 
 // router.get("/", userController.getAllUsers)
 
 //get user's friend 
-router.get("/friends/:userId",
-    catchAsync(userController.getUserFriends)
+router.get("/followers/:userId",
+    catchAsync(userController.getUserFollowers)
 )
 
 //follow a user
-router.put("/:id/follow",
-    catchAsync(userController.followUser)
+router.post("/:id/follow",
+    catchAsync(userController.userInteraction)
 )
 //unfollow a user
-router.put("/:id/unfollow",
-    catchAsync(userController.unfollowUser)
+router.post("/:id/unfollow",
+    catchAsync(userController.userInteraction)
 )
 
 
