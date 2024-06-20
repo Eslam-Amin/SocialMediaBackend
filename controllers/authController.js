@@ -5,7 +5,7 @@ const jwt = require("jsonwebtoken");
 const AppError = require("./../utils/appError")
 const catchAsync = require("./../utils/catchAsync");
 const generateHTML = require("./../utils/generateHTML")
-const sendEmail = require("./../utils/email")
+const { sendEmail, sendEmailGoogle } = require("./../utils/email")
 
 const signToken = id => {
     return jwt.sign({
@@ -144,7 +144,7 @@ const forgotPassowrd = catchAsync(async (req, res, next) => {
     reqtuest with your new password and passsword confirtm to: ${resetURL}
     \n and if you didn't forget your password, please ignore this email!`
     try {
-        await sendEmail({
+        await sendEmailGoogle({
             email: req.body.email,
             subject: "reset your password token (valid for  10min)",
             message,

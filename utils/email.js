@@ -14,7 +14,7 @@ const sendEmailGoogle = async options => {
     });
     // Email Options
     const mailOptions = {
-        // from: `${process.env.APP_NAME} <MAIL>`,
+        from: `${process.env.APP_NAME} <MAIL>`,
         to: options.email,
         subject: options.subject,
         text: options.message,
@@ -75,4 +75,4 @@ const sendEmail1 = async options => {
     await transporter.sendMail(mailOptions);
 }
 
-module.exports = sendEmail;
+module.exports = { sendEmail, sendEmailGoogle };
