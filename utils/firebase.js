@@ -7,13 +7,13 @@ const { getStorage } = require("firebase/storage");
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-    apiKey: "AIzaSyCuMBTEcyS-hVImV4p79xaRI3l0-PYDfVQ",
-    authDomain: "social-network-media.firebaseapp.com",
-    projectId: "social-network-media",
-    storageBucket: "social-network-media.appspot.com",
-    messagingSenderId: "792340065687",
-    appId: "1:792340065687:web:a44b3051e1d4197ae4e8d2",
-    measurementId: "G-MS7GPF96XH"
+    apiKey: process.env.API_KEY,
+    authDomain: process.env.AUTH_DOMAIN,
+    projectId: process.env.PROJECT_ID,
+    storageBucket: process.env.STORAGE_BUCKET,
+    messagingSenderId: process.env.MESSAGING_SENDER_ID,
+    appId: process.env.APP_ID,
+    measurementId: process.env.MEASUREMENT_ID,
 };
 
 
