@@ -19,7 +19,6 @@ const createPost = async (req, res) => {
     const post = await newPost.save();
     post.user = req.user
 
-
     res.status(201).json({
         status: "success",
         post,

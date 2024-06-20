@@ -7,6 +7,7 @@ const cookieParser = require("cookie-parser")
 const mongoSanitize = require("express-mongo-sanitize")
 const xss = require("xss-clean")
 const hpp = require("hpp")
+const bodyParser = require('body-parser');
 
 
 const rateLimit = require("express-rate-limit")
@@ -62,6 +63,8 @@ app.use(cors({ credentials: true, origin: true }));
 
 //middleware
 app.use(express.json())
+app.use(bodyParser.json())
+app.use(bodyParser.urlencoded({ extended: true }))
 app.use(helmet());
 app.use(morgan("common"));
 app.use(cookieParser())

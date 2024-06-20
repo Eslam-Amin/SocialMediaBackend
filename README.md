@@ -135,4 +135,4 @@ This server has been deployed to Render.com. You can access it through this repo
 To enhance the project further, consider the following:
   
 - **Real-time Chatting:**
-  - Integrate real-time chat functionality using Socket.io.
+  - Integrate real-time chat functionality using Socket.io. [Done ✅]
