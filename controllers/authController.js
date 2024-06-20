@@ -126,7 +126,7 @@ const forgotPassowrd = catchAsync(async (req, res, next) => {
     await user.save({ runValidators: false });
     //send it the user's email
     // const resetURL = `${req.protocol}://${req.get("host")}/api/users/reset-password/${resetToken}`;
-    const resetURL = `${process.env.FRONTEND_URL}/auth/reset-password/${resetToken}`;
+    const resetURL = `${process.env.FRONTEND_URL}/authenticate/reset-password/${resetToken}`;
     const btnLink =
         `${req.get("origin")}/authenticate/reset-password/${resetToken}`;
     const html = generateHTML({
