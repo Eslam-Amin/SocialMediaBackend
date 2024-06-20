@@ -3,6 +3,8 @@ const Post = require("../models/postModel");
 const Likes = require("../models/likesModel");
 const Comments = require("../models/commentsModel");
 const Followers = require("../models/followersModel");
+const fileController = require("./../controllers/firebase.controller");
+
 const AppError = require("../utils/appError");
 const APIFeatures = require("../utils/apiFeatures")
 const sharp = require("sharp")
@@ -10,7 +12,7 @@ const sharp = require("sharp")
 
 const createPost = async (req, res) => {
     if (req.file) {
-        req.body.img = "posts/" + req.file.filename;
+        req.body.img = req.body.url;
     }
     req.body.user = req.user._id;
     const newPost = new Post(req.body);
@@ -138,6 +140,7 @@ const deletePost = async (req, res) => {
 
     if (post) {
         if (post.user.toString() === req.user._id.toString()) {
+            await fileController.firebaseDelete(post.img)
             await post.deleteOne({ $set: req.body });
             await Comments.deleteMany({ post: req.params.id })
             await Likes.deleteMany({ post: req.params.id })
@@ -218,7 +221,7 @@ const resizePostPhoto = async (req, res, next) => {
         })
         .toFormat("jpeg")
         .jpeg({ quality: 90 })
-        .toFile(`public/images/posts/${req.file.filename}`)
+    // .toFile(`public/images/posts/${req.file.filename}`)
     return next();
 }
 

@@ -3,6 +3,8 @@ const router = require("express").Router();
 const userController = require("../controllers/userController");
 const authController = require("../controllers/authController")
 const multerController = require("../utils/multerController")
+const fileController = require("./../controllers/firebase.controller");
+
 const catchAsync = require("./../utils/catchAsync");
 router.use(authController.protect)
 router.route("/")
@@ -13,9 +15,10 @@ router.route("/")
 router.route("/authenticate-user")
     .get(catchAsync(userController.authenticateUser)
     )
-router.put("/upload/profilePicture",
+router.put("/upload/profile-picture",
     multerController.uploadUserImage,
     catchAsync(userController.resizeUserPhoto),
+    fileController.firebaseUpload("User"),
     catchAsync(userController.uploadProfilePicture)
 )
 
@@ -31,8 +34,8 @@ router.route("/delete-me")
 
 router.route("/:id")
     .put(
-        multerController.uploadUserImage,
-        catchAsync(userController.resizeUserPhoto),
+        // multerController.uploadUserImage,
+        // catchAsync(userController.resizeUserPhoto),
         catchAsync(userController.updateUser))
     .delete(
         catchAsync(userController.deleteUser)

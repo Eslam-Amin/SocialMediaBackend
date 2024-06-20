@@ -2,7 +2,8 @@ const bcrypt = require("bcrypt");
 const User = require("../models/userModel")
 const Followers = require("../models/followersModel")
 const AppError = require("./../utils/appError")
-const jwt = require("jsonwebtoken")
+const fileController = require("./../controllers/firebase.controller");
+
 const sharp = require("sharp")
 
 const getAllUsers = async (req, res) => {
@@ -18,8 +19,8 @@ const getAllUsers = async (req, res) => {
 
 const uploadProfilePicture = async (req, res) => {
     let img = req.file.filename;
-    req.body.profilePicture = "person/" + req.file.filename
-    console.log(req.body.profilePicture)
+    req.body.profilePicture = req.body.url
+    await fileController.firebaseDelete(req.user.profilePicture);
     const user = await User.findByIdAndUpdate(req.user._id, { $set: { ...req.body } }, {
         new: true
     }).select("name username profilePicture _id gender");
@@ -263,7 +264,7 @@ const resizeUserPhoto = async (req, res, next) => {
         })
         .toFormat("jpeg")
         .jpeg({ quality: 90 })
-        .toFile(`public/images/person/${req.file.filename}`)
+    // .toFile(`public/images/person/${req.file.filename}`)
     return next();
 }
 

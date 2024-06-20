@@ -13,12 +13,11 @@ const multer = require("multer")
 //     });
 // }
 const multerStorage = multer.memoryStorage();
-const publicFolder = "public/images"
+// const publicFolder = "public/images"
 
 //multer will only accepts image 
 //using mimetype image/imageExtension
 const multerFilter = (req, file, cb) => {
-    console.log("in multer Controller, ", file)
     if (file.mimetype.startsWith("image"))
         cb(null, true)
     else
@@ -39,11 +38,10 @@ const uploadPostImageConfiguration = multer({
 
 
 
-const uploadUserImage = uploadUserImageConfiguration.single("profilePicture")
-const uploadPostImage = uploadPostImageConfiguration.single("postImage")
+const uploadUserImage = uploadUserImageConfiguration.single("media")
+const uploadPostImage = uploadPostImageConfiguration.single("media")
 
 
 module.exports = {
     uploadUserImage, uploadPostImage
-
 }

@@ -2,6 +2,7 @@ const router = require("express").Router();
 
 const postController = require("./../controllers/postController");
 const authController = require("./../controllers/authController");
+const fileController = require("./../controllers/firebase.controller");
 const multerController = require("../utils/multerController")
 const commentsRouter = require("./commentsRoutes")
 const catchAsync = require("./../utils/catchAsync")
@@ -15,6 +16,7 @@ router.route("/")
     .post(
         multerController.uploadPostImage,
         catchAsync(postController.resizePostPhoto),
+        fileController.firebaseUpload("Posts"),
         catchAsync(postController.createPost)
     )
 
