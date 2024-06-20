@@ -23,17 +23,22 @@ let folderName;
 
 exports.firebaseUpload = (modelName) =>
     asyncHandler(async (req, res, next) => {
-        folderName = modelName
-        try {
-            const image = req.file
-            req.body.url = await uploadImageAndGetUrl(image);
-            next();
-        } catch (error) {
-            return res.status(400).json({
-                success: false,
-                error: error.message,
-            });
+
+        if (req.file) {
+            folderName = modelName
+            try {
+                const image = req.file
+                req.body.url = await uploadImageAndGetUrl(image);
+                next();
+            } catch (error) {
+                return res.status(400).json({
+                    success: false,
+                    error: error.message,
+                });
+            }
         }
+        else
+            next()
     });
 
 
