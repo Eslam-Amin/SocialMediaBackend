@@ -14,6 +14,7 @@ router.route("/")
     )
     .post(
         multerController.uploadPostImage,
+        catchAsync(postController.resizePostPhoto),
         catchAsync(postController.createPost)
     )
 

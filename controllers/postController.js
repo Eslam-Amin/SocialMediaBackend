@@ -5,13 +5,12 @@ const Comments = require("../models/commentsModel");
 const Followers = require("../models/followersModel");
 const AppError = require("../utils/appError");
 const APIFeatures = require("../utils/apiFeatures")
+const sharp = require("sharp")
 
 
 const createPost = async (req, res) => {
     if (req.file) {
-        req.body.img = req.file.filename;
-        //post/1717104343480_post-Ecas.jpg
-        req.body.img = `${req.body.img.split('-')[0].split('_')[1]}/${req.body.img}`
+        req.body.img = "posts/" + req.file.filename;
     }
     req.body.user = req.user._id;
     const newPost = new Post(req.body);
@@ -208,9 +207,25 @@ const getPostLikes = async (req, res, next) => {
 };
 
 
+const resizePostPhoto = async (req, res, next) => {
+    if (!req.file)
+        return next();
+    req.file.filename = `${Date.now()}-post-${req.user.username}.jpeg`;
+    sharp(req.file.buffer)
+        .resize(500, 500, {
+            fit: 'inside',
+            withoutEnlargement: true
+        })
+        .toFormat("jpeg")
+        .jpeg({ quality: 90 })
+        .toFile(`public/images/posts/${req.file.filename}`)
+    return next();
+}
+
 
 module.exports = {
     createPost, updatePost, deletePost,
     postReaction, getPost, getAllPosts,
-    getTimelinePosts, getProfilePosts, getPostLikes
+    getTimelinePosts, getProfilePosts, getPostLikes,
+    resizePostPhoto
 }

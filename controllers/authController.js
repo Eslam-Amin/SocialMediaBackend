@@ -97,14 +97,14 @@ const protect = catchAsync(async (req, res, next) => {
     if (token === "null")
         return next(new AppError("you're not logged In, Please Login to get access", 401))
     const decoded = jwt.verify(token, process.env.JWT_SEC)
-    const currentUser = await User.findById(decoded.id).select("name username gender passwordChangedAt profilePicture");
+    const currentUser = await User.findById(decoded.id).select("name username gender passwordChangedAt profilePicture isAdmin");
 
     if (!currentUser)
         return next(new AppError("The user belgons to this token is no longer exist", 401));
     const changed = currentUser.isPasswordChanged(decoded.iat);
     // console.log("password changed? in authController.protect ", changed)
     //check if user changed password after the token was issued;
-    if (currentUser.isPasswordChanged(decoded.iat))
+    if (changed)
         return next(new AppError("The User Recently changed his password! Please Login Again.", 401))
     currentUser.passwordChangedAt = undefined;
     req.user = currentUser;
@@ -126,7 +126,7 @@ const forgotPassowrd = catchAsync(async (req, res, next) => {
     await user.save({ runValidators: false });
     //send it the user's email
     // const resetURL = `${req.protocol}://${req.get("host")}/api/users/reset-password/${resetToken}`;
-    const resetURL = `${process.env.FRONTEND_URL}/auth/reset-password/${resetToken}`;
+    const resetURL = `${process.env.FRONTEND_URL_LOCAL}/auth/reset-password/${resetToken}`;
     const btnLink =
         `${req.get("origin")}/auth/reset-password/${resetToken}`;
     const html = generateHTML({

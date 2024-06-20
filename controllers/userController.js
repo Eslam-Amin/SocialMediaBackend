@@ -3,6 +3,7 @@ const User = require("../models/userModel")
 const Followers = require("../models/followersModel")
 const AppError = require("./../utils/appError")
 const jwt = require("jsonwebtoken")
+const sharp = require("sharp")
 
 const getAllUsers = async (req, res) => {
     const users = await User.find({}, { password: 0, updatedAt: 0 }).sort({ city: -1 });
@@ -16,13 +17,12 @@ const getAllUsers = async (req, res) => {
 
 
 const uploadProfilePicture = async (req, res) => {
-    console.log(req.file)
     let img = req.file.filename;
-    req.body.profilePicture = `${img.split('-')[0].split('_')[1]}/${img}`
+    req.body.profilePicture = "person/" + req.file.filename
     console.log(req.body.profilePicture)
     const user = await User.findByIdAndUpdate(req.user._id, { $set: { ...req.body } }, {
         new: true
-    });
+    }).select("name username profilePicture _id gender");
     res.status(200).json({
         status: "success",
         user
@@ -49,13 +49,19 @@ const getUser = async (req, res, next) => {
 
 const topUsers = async (req, res, next) => {
 
-    const users = await Followers.aggregate([
+    let users = await Followers.aggregate([
         {
             $group: {
                 _id: "$user",
                 totalFollowers: { $sum: 1 }
             }
         },
+        {
+            $match: {
+                _id: { $ne: (req.user._id) }
+            }
+        },
+
         {
             $sort: { totalFollowers: -1 }
         },
@@ -86,8 +92,6 @@ const topUsers = async (req, res, next) => {
         }
     ]);
 
-    // const topOnes = await User.find({ _id: { $in: top } })
-    //     .select("_id username gender name profilePicture isAdmin")
     res.status(200).json({
         status: "sucess",
         users
@@ -249,13 +253,26 @@ const unfollowUser = async (req, res) => {
     }
 };
 
+const resizeUserPhoto = async (req, res, next) => {
+    if (!req.file)
+        return next();
+    req.file.filename = `${Date.now()}_user-${req.user.username}.jpeg`;
+    sharp(req.file.buffer)
+        .resize(500, 500, {
+            fit: 'cover',
+        })
+        .toFormat("jpeg")
+        .jpeg({ quality: 90 })
+        .toFile(`public/images/person/${req.file.filename}`)
+    return next();
+}
 
 module.exports = {
     getUser, getAllUsers,
     topUsers, deleteMe,
     searchUser, updateUser,
     updateUserDesc, deleteUser,
-    getUserFollowers,
+    getUserFollowers, resizeUserPhoto,
     authenticateUser, uploadProfilePicture,
     userInteraction, getAllFollowers
 

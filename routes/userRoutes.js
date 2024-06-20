@@ -15,6 +15,7 @@ router.route("/authenticate-user")
     )
 router.put("/upload/profilePicture",
     multerController.uploadUserImage,
+    catchAsync(userController.resizeUserPhoto),
     catchAsync(userController.uploadProfilePicture)
 )
 
@@ -31,6 +32,7 @@ router.route("/delete-me")
 router.route("/:id")
     .put(
         multerController.uploadUserImage,
+        catchAsync(userController.resizeUserPhoto),
         catchAsync(userController.updateUser))
     .delete(
         catchAsync(userController.deleteUser)

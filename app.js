@@ -9,11 +9,13 @@ const xss = require("xss-clean")
 const hpp = require("hpp")
 
 
-// const rateLimit = require("express-rate-limit")
+const rateLimit = require("express-rate-limit")
 
 const userRouter = require("./routes/userRoutes");
 const authRouter = require("./routes/authRoutes");
 const postRouter = require("./routes/postRoutes");
+const conversationRouter = require("./routes/conversation.routes");
+const messageRouter = require("./routes/message.routes");
 
 
 
@@ -37,8 +39,6 @@ const corsOptions = {
         'Access-Control-Allow-Methods': 'POST, GET, PATCH, PUT, DELETE',
         'Access-Control-Allow-Headers': 'Content-Type, X-Auth-Token, Origin, Authorization'
     }
-
-
 };
 
 //Data Sanitization against noSql Query injection
@@ -50,11 +50,11 @@ app.use(xss())
 //Prevent parameter pollution
 app.use(hpp())
 
-// const limiter = rateLimit({
-//     max: 1000,
-//     windowMs: 60 * 60 * 1000,
-//     message: "Too many requests fromt this IP, please try again in an hour!"
-// })
+const limiter = rateLimit({
+    max: 1000,
+    windowMs: 60 * 60 * 1000,
+    message: "Too many requests fromt this IP, please try again in an hour!"
+})
 
 app.use(cors({ credentials: true, origin: true }));
 
@@ -63,13 +63,15 @@ app.use(cors({ credentials: true, origin: true }));
 //middleware
 app.use(express.json())
 app.use(helmet());
-// app.use(morgan("common"));
+app.use(morgan("common"));
 app.use(cookieParser())
 //app.use("/api", limiter)
 
 app.use("/api/v3/users", userRouter);
 app.use("/api/v3/auth", authRouter);
 app.use("/api/v3/posts", postRouter);
+app.use("/api/v3/conversation", conversationRouter);
+app.use("/api/v3/message", messageRouter);
 
 //Redirect unknown Errors
 app.all("*", (req, res, next) => {
