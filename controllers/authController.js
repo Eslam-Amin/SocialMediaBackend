@@ -33,7 +33,9 @@ const createSendToken = (user, statusCode, res, req) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-        maxAge: expiryDate
+        maxAge: expiryDate, 
+path:"/"
+
     }
 
 
