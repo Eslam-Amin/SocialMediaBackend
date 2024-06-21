@@ -60,13 +60,13 @@ const clearAllCookies = (req, res, next) => {
 }
 
 const getCookies = (req, res, next) => {
-    let cookies;
+    let cookies = [];
     for (let cookieName in req.cookies) {
         cookies.push(req.cookies[cookieName]);
     }
     console.log(res.cookies)
     console.log(req.cookies)
-    res.send("All Cookies " + cookies)
+    res.send("All Cookies " + cookies.join(","))
 
 }
 
