@@ -19,7 +19,7 @@ const signToken = id => {
     )
 }
 
-const createSendToken = (user, statusCode, res) => {
+const createSendToken = (user, statusCode, res, req) => {
     const cookieOptions = {
         expires: new Date(Date.now() +
             process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
@@ -28,6 +28,9 @@ const createSendToken = (user, statusCode, res) => {
         sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
     }
     const token = signToken(user._id);
+    // req.headers["Authorization"] = `Bearer ${token}`
+    res.setHeader('Authorization', `Bearer ${token}`)
+
     res.cookie("jwt", token, cookieOptions)
     res.status(statusCode).json({
         status: "success",
@@ -66,7 +69,7 @@ const register = catchAsync(async (req, res) => {
     //save user and return respond
     const user = await newUser.save();
 
-    createSendToken(user, 201, res)
+    createSendToken(user, 201, res, req)
 
 })
 
@@ -88,14 +91,18 @@ const login = catchAsync(async (req, res, next) => {
 
 const protect = catchAsync(async (req, res, next) => {
     //let token = null;
+    console.log("🚀---- Cookie in protect -----🚀")
+    console.log(req.headers.cookie)
+    // console.log(req.headers.Authorization)
+    console.log("🚀---- Cookie in protect -----🚀")
     if (!req.headers.cookie)
-        return next(new AppError("you're not logged In, Please Login to get access", 401))
+        return next(new AppError("you're not logged In, Please Login to get access, Specify Cookie", 401))
     let cookie = req.headers.cookie?.split("=")
     let tokenIndex = cookie?.indexOf("jwt") + 1;
     let token = cookie[tokenIndex];
 
     if (token === "null")
-        return next(new AppError("you're not logged In, Please Login to get access", 401))
+        return next(new AppError("you're not logged In, Please Login to get access, there is no token in the cookie", 401))
     const decoded = jwt.verify(token, process.env.JWT_SEC)
     const currentUser = await User.findById(decoded.id).select("name username gender passwordChangedAt profilePicture isAdmin");
 
