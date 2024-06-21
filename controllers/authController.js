@@ -28,18 +28,12 @@ const createSendToken = (user, statusCode, res, req) => {
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
     }
-    const options = {
-        expires: expiryDate,
-        httpOnly: true,
-        sameSite: 'strict'
-    }
 
     const token = signToken(user._id);
     // req.headers["Authorization"] = `Bearer ${token}`
     res.setHeader('Authorization', `Bearer ${token}`)
 
     res.cookie("token", token, cookieOptions)
-    res.cookie("tokenLegacy", token, options)
     res.status(statusCode).json({
         status: "success",
         user
@@ -110,8 +104,6 @@ const protect = catchAsync(async (req, res, next) => {
     let token = false;
     if (req.cookies["token"])
         token = req.cookies["token"]
-    else if (req.cookies["tokenLegacy"])
-        token = req.cookies["tokenLegacy"];
     else if (!token || token == "null")
         return next(new AppError("you're not logged In, Please Login to get access, Specify Cookie", 401))
 
