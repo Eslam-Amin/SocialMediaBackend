@@ -20,25 +20,29 @@ const signToken = id => {
 }
 
 const createSendToken = (user, statusCode, res, req) => {
+    const expiryDate = new Date(Date.now() +
+        process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000);
     const cookieOptions = {
-        expires: new Date(Date.now() +
-            process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
+        expires: expiryDate,
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
     }
-    const cookieLegacyOptions = {
-        expires: new Date(Date.now() +
-            process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
+    const options = {
+        // domain: 'http://localhost:3001/',
+        path: '/',
+        expires: expiryDate,
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
+        sameSite: 'Lax'
     }
+
     const token = signToken(user._id);
     // req.headers["Authorization"] = `Bearer ${token}`
     res.setHeader('Authorization', `Bearer ${token}`)
 
     res.cookie("token", token, cookieOptions)
-    res.cookie("tokenLegacy", token, cookieLegacyOptions)
+    res.cookie("tokenLegacy", token, options)
     res.status(statusCode).json({
         status: "success",
         user
