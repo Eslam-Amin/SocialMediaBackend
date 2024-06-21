@@ -34,11 +34,7 @@ const createSendToken = (user, statusCode, res, req) => {
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
     }
-    const legacyOptions = {
-        expires: expiryDate,
-        httpOnly: true,
-        sameSite: "strict",
-    }
+
 
     const token = signToken(user._id);
     // req.headers["Authorization"] = `Bearer ${token}`
@@ -46,7 +42,6 @@ const createSendToken = (user, statusCode, res, req) => {
 
     res.cookie("token", token, cookieOptions)
     res.cookie("tokenLegacySecure", token, legacyOptionsSecure)
-    res.cookie("tokenLegacy", token, legacyOptions)
     res.status(statusCode).json({
         status: "success",
         user
@@ -77,8 +72,7 @@ const getCookies = (req, res, next) => {
     for (let cookieName in req.cookies) {
         cookies.push(req.cookies[cookieName]);
     }
-    console.log(res.cookies)
-    console.log(req.cookies)
+
     res.send("All Cookies " + cookies.join(","))
 
 }
@@ -127,13 +121,12 @@ const protect = catchAsync(async (req, res, next) => {
     //let token = null;
     console.log("🚀---- Cookie in protect -----🚀")
     console.log(req.cookies)
+    console.log(res.cookies)
     // console.log(req.headers.Authorization)
     console.log("🚀---- Cookie in protect -----🚀")
     let token = false;
     if (req.cookies["token"])
         token = req.cookies["token"]
-    else if (req.cookies["tokenLegacy"])
-        token = req.cookies["tokenLegacy"]
     else if (req.cookies["tokenLegacySecure"])
         token = req.cookies["tokenLegacySecure"]
     else if (!token || token == "null")
