@@ -51,6 +51,14 @@ const clearCookie = (req, res, next) => {
         })
 }
 
+const clearAllCookies = (req, res, next) => {
+    for (let cookieName in req.cookies) {
+        res.cookie(cookieName, '', { expires: new Date(0) });
+    }
+    res.send("all Cookies Has been Deleted")
+
+}
+
 const register = catchAsync(async (req, res) => {
 
     //create new user
@@ -219,5 +227,6 @@ const restrictTo = (...roles) => {
 module.exports = {
     register, login,
     protect, clearCookie,
-    forgotPassowrd, resetPassword
+    forgotPassowrd, resetPassword,
+    clearAllCookies
 }
