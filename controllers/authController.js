@@ -31,7 +31,6 @@ const createSendToken = (user, statusCode, res, req) => {
     const options = {
         expires: expiryDate,
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",
         sameSite: 'strict'
     }
 
