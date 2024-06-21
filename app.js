@@ -57,7 +57,7 @@ const limiter = rateLimit({
     message: "Too many requests fromt this IP, please try again in an hour!"
 })
 
-//const origin = process.env.NODE_ENV === "production" ? "https://social-media-network.netlify.app/" : "http://localhost:3001/"
+// const origin = process.env.NODE_ENV === "production" ? "https://social-media-network.netlify.app/" : "http://localhost:3001/"
 app.use(cors({ credentials: true, origin: true }));
 
 

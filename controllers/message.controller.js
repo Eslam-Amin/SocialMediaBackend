@@ -1,6 +1,7 @@
 const Message = require("../models/messageModel");
 const Conversation = require("../models/conversationModel");
 const AppError = require("../utils/appError")
+const ApiFeatures = require("../utils/apiFeatures")
 const catchAsync = require("../utils/catchAsync")
 const handlers = require("../utils/handlers")
 
@@ -33,10 +34,15 @@ exports.createNewMessage = catchAsync(async (req, res, next) => {
 
 exports.getConversationMessages = catchAsync(async (req, res, next) => {
     const conversation = req.params.id;
-    const messages = await Message.find({ conversation }).populate({
+    const features = new ApiFeatures(Message.find({ conversation }).populate({
         path: "sender",
         select: "name _id gender profilePicture username isAdmin"
-    });
+    }), req.query)
+        .sort()
+        .paginate()
+
+    const messages = await features.query;
+
     // if (!messages || messages.length === 0) return next(new AppError("There is no messages with this conversation ", 404))
 
     res.status(200).json({
