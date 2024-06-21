@@ -58,8 +58,7 @@ const limiter = rateLimit({
 })
 
 // const origin = process.env.NODE_ENV === "production" ? "https://social-media-network.netlify.app/" : "http://localhost:3001/"
-app.use(cors({ credentials: true, origin: true }));
-
+app.use(cors({ credentials: true, origin: true, maxAge: 3600000 }));
 
 
 //middleware
