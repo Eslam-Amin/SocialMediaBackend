@@ -32,7 +32,7 @@ const createSendToken = (user, statusCode, res, req) => {
         expires: expiryDate,
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: 'none'
+        sameSite: 'strict'
     }
 
     const token = signToken(user._id);
