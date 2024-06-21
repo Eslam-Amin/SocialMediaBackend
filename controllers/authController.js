@@ -59,6 +59,17 @@ const clearAllCookies = (req, res, next) => {
 
 }
 
+const getCookies = (req, res, next) => {
+    let cookies;
+    for (let cookieName in req.cookies) {
+        cookies.push(req.cookies[cookieName]);
+    }
+    console.log(res.cookies)
+    console.log(req.cookies)
+    res.send("All Cookies " + cookies)
+
+}
+
 const register = catchAsync(async (req, res) => {
 
     //create new user
@@ -228,5 +239,5 @@ module.exports = {
     register, login,
     protect, clearCookie,
     forgotPassowrd, resetPassword,
-    clearAllCookies
+    clearAllCookies, getCookies
 }
