@@ -27,11 +27,18 @@ const createSendToken = (user, statusCode, res, req) => {
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
     }
+    const cookieLegacyOptions = {
+        expires: new Date(Date.now() +
+            process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000),
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+    }
     const token = signToken(user._id);
     // req.headers["Authorization"] = `Bearer ${token}`
     res.setHeader('Authorization', `Bearer ${token}`)
 
-    res.cookie("jwt", token, cookieOptions)
+    res.cookie("token", token, cookieOptions)
+    res.cookie("tokenLegacy", token, cookieLegacyOptions)
     res.status(statusCode).json({
         status: "success",
         user
@@ -39,10 +46,14 @@ const createSendToken = (user, statusCode, res, req) => {
 }
 
 const clearCookie = (req, res, next) => {
-    return res.cookie("jwt", "loggedOut", {
+    return res.cookie("token", "loggedOut", {
         expires: new Date(Date.now() -
             process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000)
     })
+        .cookie("tokenLegacy", "loggedOut", {
+            expires: new Date(Date.now() -
+                process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000)
+        })
         .json({
             status: "success",
             message: "cookies are cleared"
@@ -65,9 +76,9 @@ const register = catchAsync(async (req, res) => {
         passwordChangedAt: req.body.passwordChangedAt,
 
     });
-    user.password = undefined;
     //save user and return respond
     const user = await newUser.save();
+    user.password = undefined;
 
     createSendToken(user, 201, res, req)
 
@@ -92,17 +103,17 @@ const login = catchAsync(async (req, res, next) => {
 const protect = catchAsync(async (req, res, next) => {
     //let token = null;
     console.log("🚀---- Cookie in protect -----🚀")
-    console.log(req.headers.cookie)
+    console.log(req.cookies)
     // console.log(req.headers.Authorization)
     console.log("🚀---- Cookie in protect -----🚀")
-    if (!req.headers.cookie)
+    let token = false;
+    if (req.cookies["token"])
+        token = req.cookies["token"]
+    else if (req.cookies["tokenLegacy"])
+        token = req.cookies["tokenLegacy"];
+    else if (!token || token == "null")
         return next(new AppError("you're not logged In, Please Login to get access, Specify Cookie", 401))
-    let cookie = req.headers.cookie?.split("=")
-    let tokenIndex = cookie?.indexOf("jwt") + 1;
-    let token = cookie[tokenIndex];
 
-    if (token === "null")
-        return next(new AppError("you're not logged In, Please Login to get access, there is no token in the cookie", 401))
     const decoded = jwt.verify(token, process.env.JWT_SEC)
     const currentUser = await User.findById(decoded.id).select("name username gender passwordChangedAt profilePicture isAdmin");
 
@@ -115,6 +126,7 @@ const protect = catchAsync(async (req, res, next) => {
         return next(new AppError("The User Recently changed his password! Please Login Again.", 401))
     currentUser.passwordChangedAt = undefined;
     req.user = currentUser;
+
     next();
 
 })
