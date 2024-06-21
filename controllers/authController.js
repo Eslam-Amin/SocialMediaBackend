@@ -29,12 +29,10 @@ const createSendToken = (user, statusCode, res, req) => {
         sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
     }
     const options = {
-        // domain: 'http://localhost:3001/',
-        path: '/',
         expires: expiryDate,
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: 'Lax'
+        sameSite: 'none'
     }
 
     const token = signToken(user._id);
