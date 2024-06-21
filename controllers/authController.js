@@ -28,12 +28,18 @@ const createSendToken = (user, statusCode, res, req) => {
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
     }
+    const legacyOptions = {
+        expires: expiryDate,
+        httpOnly: true,
+        sameSite: "strict",
+    }
 
     const token = signToken(user._id);
     // req.headers["Authorization"] = `Bearer ${token}`
     res.setHeader('Authorization', `Bearer ${token}`)
 
     res.cookie("token", token, cookieOptions)
+    res.cookie("tokenLegacy", token, legacyOptions)
     res.status(statusCode).json({
         status: "success",
         user
