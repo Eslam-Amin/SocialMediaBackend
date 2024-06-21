@@ -45,10 +45,6 @@ const clearCookie = (req, res, next) => {
         expires: new Date(Date.now() -
             process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000)
     })
-        .cookie("tokenLegacy", "loggedOut", {
-            expires: new Date(Date.now() -
-                process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000)
-        })
         .json({
             status: "success",
             message: "cookies are cleared"
