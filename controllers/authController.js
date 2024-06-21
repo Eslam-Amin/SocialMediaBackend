@@ -43,9 +43,18 @@ path:"/"
     // req.headers["Authorization"] = `Bearer ${token}`
     res.setHeader('Authorization', `Bearer ${token}`)
 
+
     res.cookie("token", token, cookieOptions)
     res.cookie("tokenLegacySecure", token, legacyOptionsSecure)
-    res.status(statusCode).json({
+   
+
+console.log("🚀---- Cookies in createAndSendToken -----🚀")
+    console.log(token)
+    console.log(res.cookies) 
+    console.log("🚀---- Cookies in createAndSendToken -----🚀")
+
+
+ res.status(statusCode).json({
         status: "success",
         user
     })
