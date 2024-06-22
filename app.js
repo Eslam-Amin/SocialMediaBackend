@@ -8,6 +8,7 @@ const mongoSanitize = require("express-mongo-sanitize")
 const xss = require("xss-clean")
 const hpp = require("hpp")
 const bodyParser = require('body-parser');
+// const dns = require("dns")
 
 
 const rateLimit = require("express-rate-limit")
@@ -25,6 +26,8 @@ const globalErrorHandler = require("./controllers/errorController")
 
 
 const app = express();
+app.set('trust proxy', true);
+
 app.use(express.urlencoded({ extended: true }))
 //http://localhost:3000/images/folder1/image1.jpg
 // app.use(express.static(path.join(__dirname, "public")))
@@ -58,11 +61,8 @@ const limiter = rateLimit({
 })
 
 // const origin = process.env.NODE_ENV === "production" ? "https://social-media-network.netlify.app/" : "http://localhost:3001/"
-app.use(cors({ credentials: true,
- origin: true 
-}));
+app.use(cors({ credentials: true, origin: true, maxAge: 3600000 }));
 
-//maxAge: 3600000 
 
 //middleware
 app.use(express.json())
@@ -72,6 +72,15 @@ app.use(helmet());
 app.use(morgan("common"));
 app.use(cookieParser())
 //app.use("/api", limiter)
+
+app.get('/', (req, res) => {
+    const forwarded = req.headers['x-forwarded-for'];
+    let clientIp = forwarded ? forwarded.split(',').shift() : req.ip;
+    if (clientIp === '::1') {
+        clientIp = '127.0.0.1';
+    }
+    res.send(`Client IP address is ${clientIp}`);
+});
 
 app.use("/api/v3/users", userRouter);
 app.use("/api/v3/auth", authRouter);
