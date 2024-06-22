@@ -27,6 +27,7 @@ const globalErrorHandler = require("./controllers/errorController")
 
 const app = express();
 app.set('trust proxy', true);
+app.set('trust proxy', 'loopback, linklocal, uniquelocal');
 
 app.use(express.urlencoded({ extended: true }))
 //http://localhost:3000/images/folder1/image1.jpg
