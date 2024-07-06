@@ -56,23 +56,25 @@ const handleValidationError = err => {
     return new AppError(message, 400)
 }
 
+const handleInvalidJwtSignature = (_) =>
+    new AppError("Invalid token, Please login again ...", 401);
+
+const handleJwtExpired = (_) =>
+    new AppError("Expired token, Please login again ...", 401);
+
 module.exports = (err, req, res, next) => {
     err.statusCode = err.statusCode || 500;
     err.status = err.status || "error";
     if (process.env.NODE_ENV.trim() === "development") {
-
         sendErrorDev(err, res)
     } else if (process.env.NODE_ENV === "production") {
         let error = { ...err }
         console.log(err);
-        if (err.name === "CastError")
-            error = handleCastErrorDB(err);
-
-        if (err.code === 11000)
-            error = handleDuplicatedFieldsDB(err);
-
-        if (err.name === "ValidationError")
-            error = handleValidationError(err);
+        if (err.name === "JsonWebTokenError") error = handleInvalidJwtSignature();
+        if (err.name === "TokenExpiredError") error = handleJwtExpired();
+        if (err.code === 11000) error = handleDuplicatedFieldsDB(err);
+        if (err.name === "CastError") error = handleCastErrorDB(err)
+        if (err.name === "ValidationError") error = handleValidationError(err);
 
         sendErrorProd(error, res);
     }

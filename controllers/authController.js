@@ -33,8 +33,8 @@ const createSendToken = (user, statusCode, res, req) => {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
-        maxAge: expiryDate, 
-path:"/"
+        maxAge: expiryDate,
+        path: "/"
 
     }
 
@@ -46,17 +46,18 @@ path:"/"
 
     res.cookie("token", token, cookieOptions)
     res.cookie("tokenLegacySecure", token, legacyOptionsSecure)
-   
 
-console.log("🚀---- Cookies in createAndSendToken -----🚀")
+
+    console.log("🚀---- Cookies in createAndSendToken -----🚀")
     console.log(token)
-    console.log(res.cookies) 
+    console.log(res.cookies)
     console.log("🚀---- Cookies in createAndSendToken -----🚀")
 
 
- res.status(statusCode).json({
+    res.status(statusCode).json({
         status: "success",
-        user
+        user,
+        token
     })
 }
 
@@ -134,13 +135,14 @@ const protect = catchAsync(async (req, res, next) => {
     console.log("🚀---- Cookie in protect -----🚀")
     console.log(req.cookies)
     console.log(res.cookies)
-    // console.log(req.headers.Authorization)
     console.log("🚀---- Cookie in protect -----🚀")
     let token = false;
     if (req.cookies["token"])
         token = req.cookies["token"]
     else if (req.cookies["tokenLegacySecure"])
         token = req.cookies["tokenLegacySecure"]
+    else if (req.authorization.startsWith() === "Bearer")
+        token = req.authorization.split(" ")[1];
     else if (!token || token == "null")
         return next(new AppError("you're not logged In, Please Login to get access, Specify Cookie", 401))
 
@@ -237,7 +239,6 @@ const resetPassword = catchAsync(async (req, res, next) => {
     user.passwordChangedAt = Date.now()
     await user.save();
 
-    const token = signToken(user._id);
     user.passwordChangedAt = undefined
     user.password = undefined
     user.createdAt = undefined
