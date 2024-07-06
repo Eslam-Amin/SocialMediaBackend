@@ -132,19 +132,20 @@ const login = catchAsync(async (req, res, next) => {
 
 const protect = catchAsync(async (req, res, next) => {
     //let token = null;
-    console.log("🚀---- Cookie in protect -----🚀")
-    console.log(req.cookies)
-    console.log(res.cookies)
-    console.log("🚀---- Cookie in protect -----🚀")
-    let token = false;
+    let token = req.headers.authorization || false;
+    console.log("🚀---- Tokens in protect -----🚀")
+    console.log("Cookies=> ", req.cookies)
+    console.log("Header Auth=> ", req.headers.authorization)
+    console.log("🚀---- Tokens in protect -----🚀")
     if (req.cookies["token"])
         token = req.cookies["token"]
     else if (req.cookies["tokenLegacySecure"])
         token = req.cookies["tokenLegacySecure"]
-    else if (req.authorization.startsWith() === "Bearer")
-        token = req.authorization.split(" ")[1];
+    else if (token.startsWith("X-Auth-Bearer"))
+        token = req.headers.authorization.split(" ")[1];
     else if (!token || token == "null")
         return next(new AppError("you're not logged In, Please Login to get access, Specify Cookie", 401))
+
 
     const decoded = jwt.verify(token, process.env.JWT_SEC)
     const currentUser = await User.findById(decoded.id).select("name username gender passwordChangedAt profilePicture isAdmin");
