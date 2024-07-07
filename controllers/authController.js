@@ -44,8 +44,8 @@ const createSendToken = (user, statusCode, res, req) => {
     res.setHeader('Authorization', `Bearer ${token}`)
 
 
-    res.cookie("token", token, cookieOptions)
-    res.cookie("tokenLegacySecure", token, legacyOptionsSecure)
+    // res.cookie("token", token, cookieOptions)
+    // res.cookie("tokenLegacySecure", token, legacyOptionsSecure)
 
 
     console.log("🚀---- Cookies in createAndSendToken -----🚀")
@@ -90,7 +90,7 @@ const getCookies = (req, res, next) => {
 
 }
 
-const register = catchAsync(async (req, res) => {
+const register = catchAsync(async (req, res, next) => {
 
     //create new user
     const newUser = new User({
@@ -110,7 +110,7 @@ const register = catchAsync(async (req, res) => {
     const user = await newUser.save();
     user.password = undefined;
 
-    createSendToken(user, 201, res, req)
+    return await sendTokenToEmail("account")(req, res, next)
 
 })
 
@@ -123,6 +123,10 @@ const login = catchAsync(async (req, res, next) => {
 
     if (!user || !await user.validPassword(password, user.password))
         return next(new AppError("Either mail or password is INVALID", 401))
+    if (!user.verified) {
+        return await sendTokenToEmail("account")(req, res, next)
+        // return next(new AppError("Email Isn't Verfied\nA verification link has been sent to your email", 401))
+    }
     req.headers.authorization = "Bearer " + signToken(user._id);
     user.password = undefined
     createSendToken(user, 200, res, req)
@@ -137,19 +141,18 @@ const protect = catchAsync(async (req, res, next) => {
     console.log("Cookies=> ", req.cookies)
     console.log("Header Auth=> ", req.headers.authorization)
     console.log("🚀---- Tokens in protect -----🚀")
-    if (req.cookies["token"])
+    if (token.startsWith("X-Auth-Bearer"))
+        token = req.headers.authorization.split(" ")[1];
+    else if (req.cookies["token"])
         token = req.cookies["token"]
     else if (req.cookies["tokenLegacySecure"])
         token = req.cookies["tokenLegacySecure"]
-    else if (token.startsWith("X-Auth-Bearer"))
-        token = req.headers.authorization.split(" ")[1];
     else if (!token || token == "null")
         return next(new AppError("you're not logged In, Please Login to get access, Specify Cookie", 401))
 
 
     const decoded = jwt.verify(token, process.env.JWT_SEC)
-    const currentUser = await User.findById(decoded.id).select("name username gender passwordChangedAt profilePicture isAdmin");
-
+    const currentUser = await User.findById(decoded.id).select("name username gender passwordChangedAt profilePicture isAdmin verified");
     if (!currentUser)
         return next(new AppError("The user belgons to this token is no longer exist", 401));
     const changed = currentUser.isPasswordChanged(decoded.iat);
@@ -157,6 +160,9 @@ const protect = catchAsync(async (req, res, next) => {
     //check if user changed password after the token was issued;
     if (changed)
         return next(new AppError("The User Recently changed his password! Please Login Again.", 401))
+    if (!currentUser.verified)
+        return next(new AppError("This user isn't verified.", 401))
+
     currentUser.passwordChangedAt = undefined;
     req.user = currentUser;
 
@@ -165,58 +171,114 @@ const protect = catchAsync(async (req, res, next) => {
 })
 
 
-const forgotPassowrd = catchAsync(async (req, res, next) => {
-    //get user based on POSTed Email
-    const user = await User.findOne({ email: req.body.email });
-    if (!user)
-        return res.status(200).json({
-            status: "success",
-            message: "token sent to email!"
-        })
-    //generate the random reset Token
-    const resetToken = user.createPasswordResetToken();
-    await user.save({ runValidators: false });
-    //send it the user's email
-    // const resetURL = `${req.protocol}://${req.get("host")}/api/users/reset-password/${resetToken}`;
-    const resetURL = `${process.env.FRONTEND_URL}/authenticate/reset-password/${resetToken}`;
+const sendTokenToEmail = (option) => catchAsync(async (req, res, next) => {
+    let user;
+    if (req.user)
+        user = req.user;
+    else
+        user = await User.findOne({ email: req.body.email })
+    let emailTitle = `Verify Your Account`
+    let emailSubTitle = `Tap the button below to verify your email address.`;
+    let btnText = "Verify Account";
+    let footerNote =
+        `You received this email because you were added as a user on our website. If you did not initiate this action, please ignore this email.`
+    // let emailGreeting = `Hi ${user.firstName}, Welcome to Hajjo Store!`
+    let resetToken;
+
+    if (option === "account") {
+        resetToken = user.createEmailToken();
+    }
+    else {
+        emailTitle = `Reset Your Account password`
+        emailSubTitle = `Tap the button below to Reset your password.`
+        btnText = "Reset Password"
+        footerNote = `You received this email because you requested to reset your password, If you did not initiate this action, please ignore this email.`
+        resetToken = user.createPasswordResetToken();
+    }
+    await user.save();
+    console.log(option === "account")
+    // Send email
+    const resetURL = `${process.env.FRONTEND_URL_LOCAL}/authenticate/${option === "account" ? 'verify-account' : 'reset-password'}/${resetToken}`;
     const btnLink =
-        `${req.get("origin")}/authenticate/reset-password/${resetToken}`;
+        `${req.get("origin")}/authenticate/${option === "account" ? 'verify-account' : 'reset-password'}/${resetToken}`;
     const html = generateHTML({
         user,
         link: resetURL,
-        emailTitle: "Verify Your Account",
-        emailSubTitle: "Tap the button below to verify your email address.",
-        btnText: "Verify Account",
+        emailTitle,
+        emailSubTitle,
+        btnText,
         btnLink: resetURL,
         belowLink: resetURL,
         footerNote:
             "You received this email because you were added as an admin on our website. If you did not initiate this action, please ignore this email.",
     });
-    const message = `forgot your password? submit a POST 
-    reqtuest with your new password and passsword confirtm to: ${resetURL}
-    \n and if you didn't forget your password, please ignore this email!`
     try {
-        await sendEmailGoogle({
-            email: req.body.email,
-            subject: "reset your password token (valid for  10min)",
-            message,
-            html,
-
-        })
-
-        res.status(200).json({
-            status: "success",
-            message: "token sent to email!"
-        })
+        await sendEmail({
+            email: user.email,
+            subject: `${process.env.APP_NAME} account verification (Valid for 10mins)`,
+            html: html,
+        });
+    } catch (err) {
+        console.log(err)
+        return next(
+            new AppError(
+                "Unable to send verification email, please try again later.",
+                422
+            )
+        );
     }
-    catch (err) {
-        console.log(err, " in authController.161")
-        user.passwordResetToken = undefined
-        user.passwordResetExpiresAt = undefined
-        await user.save({ validateBeforeSave: false });
-        return next(new AppError("there was an error sending the mail, try again", 500));
-    }
-})
+    // Response
+    res.status(200).json({
+        success: true,
+        msg: "Verification email is sent to your email address",
+    });
+});
+
+
+/**
+ * 
+ * @param Model this is the global Model For User, Admin, etc..  
+ * @returns a response whether the link to verify his email is valid or not
+ * if valid, then verify his account it not then send him that 
+ */
+const verifyAccount = catchAsync(async (req, res, next) => {
+    const hashedToken = crypto.createHash("sha256")
+        .update(req.params.token)
+        .digest("hex")
+    const user = await User.findOne({
+        verificationToken: hashedToken,
+        verifyTokenExpiresAt:
+        {
+            $gt:
+                Date.now()
+        }
+    })
+    if (!user) return next(new AppError("Token is Expired!, Please Try Again", 400))
+    // Check if user is already verified
+    if (user.verified)
+        return next(new AppError("This account is already verified", 400));
+    // Input validation
+
+    user.verified = true;
+    user.verifyTokenExpiresAt = undefined;
+    user.verificationToken = undefined;
+    await user.save();
+    createSendToken(user, 200, res, req)
+    // // Response
+    // res.status(200).json({
+    //     success: true,
+    //     msg: "your account is verified successfully",
+    //     data: user,
+    //     token,
+    //     tokenExpDate
+    // });
+});
+
+
+
+const forgotPassword = (Model) => catchAsync(async (req, res, next) => {
+    await sendTokenToEmail(Model, "password-token")(req, res, next)
+});
 
 
 const resetPassword = catchAsync(async (req, res, next) => {
@@ -262,6 +324,7 @@ const restrictTo = (...roles) => {
 module.exports = {
     register, login,
     protect, clearCookie,
-    forgotPassowrd, resetPassword,
-    clearAllCookies, getCookies
+    forgotPassword, resetPassword,
+    clearAllCookies, getCookies,
+    verifyAccount
 }

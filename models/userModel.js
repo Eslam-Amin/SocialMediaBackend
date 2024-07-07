@@ -23,7 +23,6 @@ const userSchema = new mongoose.Schema({
         unique: true,
         max: 50,
         lowercase: true,
-        select: false
     },
     password: {
         type: String,
@@ -79,7 +78,13 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: true,
         select: false
-    }
+    },
+    verificationToken: String,
+    verifyTokenExpiresAt: Date,
+    verified: {
+        type: Boolean,
+        default: false,
+    },
 }, {
     toJSON: {
         virtuals: true
@@ -127,15 +132,23 @@ userSchema.methods.isPasswordChanged = function (JwtTimestamp) {
 }
 
 
-userSchema.methods.createPasswordResetToken = function (next) {
-    const resetToken = crypto.randomBytes(32).toString("hex")
-
-    this.passwordResetToken = crypto.createHash("sha256")
-        .update(resetToken)
-        .digest("hex")
-
+userSchema.methods.createPasswordResetToken = function () {
+    const { hashedToken, resetToken } = this.createEmailToken(true);
+    this.passwordResetToken = resetToken;
     this.passwordResetExpiresAt = Date.now() + 10 * 60 * 1000;
-    return resetToken;
+    return hashedToken;
+}
+
+userSchema.methods.createEmailToken = function (forPassword) {
+    const hashedToken = crypto.randomBytes(32).toString("hex")
+
+    this.verificationToken = crypto.createHash("sha256")
+        .update(hashedToken)
+        .digest("hex")
+    this.verifyTokenExpiresAt = Date.now() + 10 * 60 * 1000;
+    if (forPassword)
+        return { hashedToken, resetToken: this.verificationToken }
+    else return hashedToken
 }
 
 

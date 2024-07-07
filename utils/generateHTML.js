@@ -95,8 +95,8 @@ const generateHTML = ({
         <div class="content">
             <p>Hi ${user.name},</p>
             <p>Welcome to Our Social Network! You're just one step away from joining millions of users worldwide.</p>
-            <p>To get Reset your password, click the button below to do it:</p>
-            <p><a href="${btnLink}" class="button">Reset Your Password</a></p>
+            <p>To get ${btnText}, click the button below to do it:</p>
+            <p><a href="${btnLink}" class="button">${btnText}</a></p>
             <p>If you didn't create an account, please disregard this email.</p>
             <p style="margin: 0;"><b>NOTE</b>: This Link will expire after 10mins.</p>
 

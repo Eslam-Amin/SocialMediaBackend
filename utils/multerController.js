@@ -1,19 +1,6 @@
 const AppError = require("./appError")
 const multer = require("multer")
-
-// const multerStorage = (entity) => {
-//     return multer.diskStorage({
-//         destination: (req, file, cb) => {
-//             //the first argument is err if not then it's null
-//             cb(null, `${publicFolder}/${entity}`)
-//         },
-//         filename: (req, file, cb) => {
-//             cb(null, `${Date.now()}_${entity}-${file.originalname}`)
-//         }
-//     });
-// }
 const multerStorage = multer.memoryStorage();
-// const publicFolder = "public/images"
 
 //multer will only accepts image 
 //using mimetype image/imageExtension
@@ -27,7 +14,9 @@ const multerFilter = (req, file, cb) => {
 
 const uploadUserImageConfiguration = multer({
     storage: multerStorage,
-    fileFilter: multerFilter
+    fileFilter: multerFilter,
+    limits: { fileSize: 10 * 1024 * 1024 } // Set the limit to 10MB
+
 })
 
 
