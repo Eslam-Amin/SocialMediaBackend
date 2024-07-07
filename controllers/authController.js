@@ -213,7 +213,7 @@ const sendTokenToEmail = (option) => catchAsync(async (req, res, next) => {
             "You received this email because you were added as an admin on our website. If you did not initiate this action, please ignore this email.",
     });
     try {
-        await sendEmail({
+        await sendEmailGoogle({
             email: user.email,
             subject: `${process.env.APP_NAME} account verification (Valid for 10mins)`,
             html: html,
