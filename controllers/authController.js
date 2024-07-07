@@ -198,7 +198,7 @@ const sendTokenToEmail = (option) => catchAsync(async (req, res, next) => {
     await user.save();
     console.log(option === "account")
     // Send email
-    const resetURL = `${process.env.FRONTEND_URL_LOCAL}/authenticate/${option === "account" ? 'verify-account' : 'reset-password'}/${resetToken}`;
+    const resetURL = `${process.env.FRONTEND_URL}/authenticate/${option === "account" ? 'verify-account' : 'reset-password'}/${resetToken}`;
     const btnLink =
         `${req.get("origin")}/authenticate/${option === "account" ? 'verify-account' : 'reset-password'}/${resetToken}`;
     const html = generateHTML({
