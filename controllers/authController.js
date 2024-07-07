@@ -196,7 +196,6 @@ const sendTokenToEmail = (option) => catchAsync(async (req, res, next) => {
         resetToken = user.createPasswordResetToken();
     }
     await user.save();
-    console.log(option === "account")
     // Send email
     const resetURL = `${process.env.FRONTEND_URL}/authenticate/${option === "account" ? 'verify-account' : 'reset-password'}/${resetToken}`;
     const btnLink =
@@ -276,8 +275,8 @@ const verifyAccount = catchAsync(async (req, res, next) => {
 
 
 
-const forgotPassword = (Model) => catchAsync(async (req, res, next) => {
-    await sendTokenToEmail(Model, "password-token")(req, res, next)
+const forgotPassword = catchAsync(async (req, res, next) => {
+    await sendTokenToEmail("password-token")(req, res, next)
 });
 
 
