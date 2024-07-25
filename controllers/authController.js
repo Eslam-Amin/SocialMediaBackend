@@ -2,7 +2,7 @@ const crypto = require("crypto")
 const User = require("../models/userModel");
 const jwt = require("jsonwebtoken");
 
-const AppError = require("./../utils/appError")
+const ApiError = require("../utils/ApiError")
 const catchAsync = require("./../utils/catchAsync");
 const generateHTML = require("./../utils/generateHTML")
 const { sendEmail, sendEmailGoogle } = require("./../utils/email")
@@ -128,15 +128,15 @@ const register = catchAsync(async (req, res, next) => {
 const login = catchAsync(async (req, res, next) => {
     const { email, password } = req.body;
     if (!email || !password)
-        return next(new AppError("please Provide email or password", 401))
+        return next(new ApiError("please Provide email or password", 401))
 
     const user = await User.findOne({ email }).select("+password -passwordChangedAt");
 
     if (!user || !await user.validPassword(password, user.password))
-        return next(new AppError("Either mail or password is INVALID", 401))
+        return next(new ApiError("Either mail or password is INVALID", 401))
     if (!user.verified) {
         return await sendTokenToEmail("account")(req, res, next)
-        // return next(new AppError("Email Isn't Verfied\nA verification link has been sent to your email", 401))
+        // return next(new ApiError("Email Isn't Verfied\nA verification link has been sent to your email", 401))
     }
     req.headers.authorization = "Bearer " + signToken(user._id);
     createSendToken(user, 200, res, req)
@@ -152,7 +152,7 @@ const protect = catchAsync(async (req, res, next) => {
     // console.log("Header Auth=> ", req.headers.authorization)
     // console.log("🚀---- Tokens in protect -----🚀")
     if (!token)
-        return next(new AppError("you're not logged In, Please Login to get access, Specify Cookie", 401))
+        return next(new ApiError("you're not logged In, Please Login to get access, Specify Cookie", 401))
     if (token.startsWith("Bearer"))
         token = req.headers.authorization.split(" ")[1];
     else if (req.cookies["token"])
@@ -162,7 +162,7 @@ const protect = catchAsync(async (req, res, next) => {
     const decoded = jwt.verify(token, process.env.JWT_SEC)
     const currentUser = await User.findById(decoded.id).select("name username gender passwordChangedAt profilePicture isAdmin verified sessionId");
     if (!currentUser)
-        return next(new AppError("The user belgons to this token is no longer exist", 401));
+        return next(new ApiError("The user belgons to this token is no longer exist", 401));
     const hashedSessionId = crypto.createHash("sha256")
         .update(req.sessionID)
         .digest("hex")
@@ -170,15 +170,15 @@ const protect = catchAsync(async (req, res, next) => {
         console.log("The user ALready has an opened session, logging out...");
         req.session.destroy();
         res.clearCookie("connect.sid");
-        return next(new AppError("The user ALready has an opened session", 401));
+        return next(new ApiError("The user ALready has an opened session", 401));
     }
     const changed = currentUser.isPasswordChanged(decoded.iat);
     // console.log("password changed? in authController.protect ", changed)
     //check if user changed password after the token was issued;
     if (changed)
-        return next(new AppError("The User Recently changed his password! Please Login Again.", 401))
+        return next(new ApiError("The User Recently changed his password! Please Login Again.", 401))
     if (!currentUser.verified)
-        return next(new AppError("This user isn't verified.", 401))
+        return next(new ApiError("This user isn't verified.", 401))
     currentUser.passwordChangedAt = undefined;
     req.user = currentUser;
 
@@ -236,7 +236,7 @@ const sendTokenToEmail = (option) => catchAsync(async (req, res, next) => {
     } catch (err) {
         console.log(err)
         return next(
-            new AppError(
+            new ApiError(
                 "Unable to send verification email, please try again later.",
                 422
             )
@@ -268,10 +268,10 @@ const verifyAccount = catchAsync(async (req, res, next) => {
                 Date.now()
         }
     })
-    if (!user) return next(new AppError("Token is Expired!, Please Try Again", 400))
+    if (!user) return next(new ApiError("Token is Expired!, Please Try Again", 400))
     // Check if user is already verified
     if (user.verified)
-        return next(new AppError("This account is already verified", 400));
+        return next(new ApiError("This account is already verified", 400));
     // Input validation
 
     user.verified = true;
@@ -310,7 +310,7 @@ const resetPassword = catchAsync(async (req, res, next) => {
 
     })
     if (!user)
-        return next(new AppError("token is invalid or has expired", 300))
+        return next(new ApiError("token is invalid or has expired", 300))
     user.password = req.body.password;
     user.passwordResetToken = undefined;
     user.passwordResetExpiresAt = undefined;
@@ -330,7 +330,7 @@ const restrictTo = (...roles) => {
     return (req, res, next) => {
         //roles ["admin"]
         if (!roles.includes(req.user.role))
-            return next(new AppError("you don't have premission to perform this action", 403))
+            return next(new ApiError("you don't have premission to perform this action", 403))
         next();
 
     }

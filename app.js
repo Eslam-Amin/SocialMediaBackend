@@ -24,13 +24,13 @@ const messageRouter = require("./routes/message.routes");
 
 
 
-const AppError = require("./utils/appError");
+const ApiError = require("./utils/ApiError");
 const globalErrorHandler = require("./controllers/errorController")
 
 
 const app = express();
 app.use(session({
-    secret: "secretSuperKeyForSessionID_socialNetwork",
+    secret: process.env.SESSION_SECRET_KEY,
     resave: false,
     saveUninitialized: true,
     cookie: {
@@ -105,7 +105,7 @@ app.use("/api/v3/message", messageRouter);
 
 //Redirect unknown Errors
 app.all("*", (req, res, next) => {
-    next(new AppError(`Can't Find ${req.originalUrl} on this server`, 404));
+    next(new ApiError(`Can't Find ${req.originalUrl} on this server`, 404));
 })
 
 //Error MiddleWare

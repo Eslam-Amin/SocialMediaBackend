@@ -1,4 +1,4 @@
-const AppError = require("./appError")
+const ApiError = require("./ApiError")
 const multer = require("multer")
 const multerStorage = multer.memoryStorage();
 
@@ -8,7 +8,7 @@ const multerFilter = (req, file, cb) => {
     if (file.mimetype.startsWith("image"))
         cb(null, true)
     else
-        cb(new AppError("Not an image, please upload only Images", 400), false)
+        cb(new ApiError("Not an image, please upload only Images", 400), false)
 }
 
 

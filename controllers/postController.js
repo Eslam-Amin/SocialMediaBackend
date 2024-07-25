@@ -5,8 +5,8 @@ const Comments = require("../models/commentsModel");
 const Followers = require("../models/followersModel");
 const fileController = require("./../controllers/firebase.controller");
 
-const AppError = require("../utils/appError");
-const APIFeatures = require("../utils/apiFeatures")
+const ApiError = require("../utils/ApiError");
+const APIFeatures = require("../utils/ApiFeatures")
 const sharp = require("sharp")
 
 
@@ -42,7 +42,7 @@ const getAllPosts = async (req, res) => {
 const getPost = async (req, res, next) => {
     const post = await Post.findById(req.params.id).select("-__v -updatedAt")
     if (!post)
-        return next(new AppError("The post not found", 404));
+        return next(new ApiError("The post not found", 404));
     res.status(200).json({
         status: "success",
         post
@@ -168,7 +168,7 @@ const deletePost = async (req, res) => {
 const postReaction = async (req, res, next) => {
     const post = await Post.findById(req.params.id)
     if (!post)
-        return next(new AppError("Post Not Found", 404))
+        return next(new ApiError("Post Not Found", 404))
 
     let likes = await Likes.findOne({ post: req.params.id, user: req.user._id })
     if (!likes) {
@@ -194,7 +194,7 @@ const postReaction = async (req, res, next) => {
 
 const getPostLikes = async (req, res, next) => {
     const post = await Post.findById(req.params.postId);
-    if (!post) return next(new AppError("post not found", 404))
+    if (!post) return next(new ApiError("post not found", 404))
 
     let likes = await Likes.find({ post: req.params.postId }).select("user -_id").populate({
         path: "user",

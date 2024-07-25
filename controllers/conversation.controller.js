@@ -1,5 +1,5 @@
 const Conversation = require("../models/conversationModel");
-const AppError = require("../utils/appError")
+const ApiError = require("../utils/ApiError")
 const catchAsync = require("../utils/catchAsync")
 const mongoose = require('mongoose');
 const { ObjectId } = require('mongodb');
@@ -12,7 +12,7 @@ exports.createNewConversation = catchAsync(async (req, res, next) => {
         members: { $all: [sender, receiver] }
     });
     console.log(existingConv)
-    if (existingConv.length !== 0) return next(new AppError(`There is a Conversation created before`, 400))
+    if (existingConv.length !== 0) return next(new ApiError(`There is a Conversation created before`, 400))
     let conversation = await Conversation.create({
         members: [
             sender,

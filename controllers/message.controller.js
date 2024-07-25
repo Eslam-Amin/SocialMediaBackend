@@ -1,7 +1,7 @@
 const Message = require("../models/messageModel");
 const Conversation = require("../models/conversationModel");
-const AppError = require("../utils/appError")
-const ApiFeatures = require("../utils/apiFeatures")
+const ApiError = require("../utils/ApiError")
+const ApiFeatures = require("../utils/ApiFeatures")
 const catchAsync = require("../utils/catchAsync")
 const handlers = require("../utils/handlers")
 
@@ -43,7 +43,7 @@ exports.getConversationMessages = catchAsync(async (req, res, next) => {
 
     const messages = await features.query;
 
-    // if (!messages || messages.length === 0) return next(new AppError("There is no messages with this conversation ", 404))
+    // if (!messages || messages.length === 0) return next(new ApiError("There is no messages with this conversation ", 404))
 
     res.status(200).json({
         success: true,

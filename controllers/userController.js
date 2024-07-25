@@ -1,7 +1,7 @@
 const bcrypt = require("bcrypt");
 const User = require("../models/userModel")
 const Followers = require("../models/followersModel")
-const AppError = require("./../utils/appError")
+const ApiError = require("../utils/ApiError")
 const fileController = require("./../controllers/firebase.controller");
 
 const sharp = require("sharp")
@@ -39,7 +39,7 @@ const getUser = async (req, res, next) => {
         ? await User.findById(userId).select("-password -updatedAt -createdAt -passwordChangedAt ")
         : await User.findOne({ username }).select("-password -updatedAt -createdAt -passwordChangedAt ");
     if (!user)
-        return next(new AppError(`No User Found with That username or id`, 404))
+        return next(new ApiError(`No User Found with That username or id`, 404))
 
     res.status(200).json({
         status: "success",
@@ -129,7 +129,7 @@ const updateUser = async (req, res, next) => {
         if (req.body.password) {
             const validPassword = await bcrypt.compare(req.body.password, user.password);
             if (!validPassword) {
-                return next(new AppError("Invalid Password!!", 400));
+                return next(new ApiError("Invalid Password!!", 400));
             }
             delete req.body.password
             const updatedUser = await User.findByIdAndUpdate(req.params.id, { $set: { ...req.body } }, {
@@ -177,7 +177,7 @@ const deleteMe = async (req, res) => {
 const getUserFollowers = async (req, res, next) => {
     const user = await User.findById(req.params.userId);
     if (!user)
-        return next(new AppError("User Not Found", 404))
+        return next(new ApiError("User Not Found", 404))
     let followers = await Followers.find({ user: req.params.userId }).select("follower -_id");
     followers = followers.map((follower) => follower.follower)
     res.status(200).json({
@@ -195,7 +195,7 @@ const userInteraction = async (req, res, next) => {
         const user = await User.findById(req.params.id);
 
         if (!user)
-            return next(new AppError("User Not Found!", 404))
+            return next(new ApiError("User Not Found!", 404))
         const isFollower = await Followers.findOne({ user: req.params.id, follower: req.user._id })
         let follower;
         if (!isFollower) {
@@ -215,7 +215,7 @@ const userInteraction = async (req, res, next) => {
 
 
     } else {
-        return next(new AppError("you can't follow yourself!", 403))
+        return next(new ApiError("you can't follow yourself!", 403))
     }
 };
 
