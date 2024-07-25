@@ -69,6 +69,10 @@ const createSendToken = async (user, statusCode, res, req) => {
 }
 
 const clearCookie = (req, res, next) => {
+    res.clearCookie("connect.sid");
+    req.session.destroy();
+
+    console.log(req.cookies)
     return res.cookie("token", "loggedOut", {
         expires: new Date(Date.now() -
             process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000)
