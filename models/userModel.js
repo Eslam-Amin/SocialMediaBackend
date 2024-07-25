@@ -81,6 +81,7 @@ const userSchema = new mongoose.Schema({
     },
     verificationToken: String,
     verifyTokenExpiresAt: Date,
+    sessionId: String,
     verified: {
         type: Boolean,
         default: false,

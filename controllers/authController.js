@@ -19,7 +19,7 @@ const signToken = id => {
     )
 }
 
-const createSendToken = (user, statusCode, res, req) => {
+const createSendToken = async (user, statusCode, res, req) => {
     const expiryDate = new Date(Date.now() +
         process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000);
     const cookieOptions = {
@@ -53,6 +53,13 @@ const createSendToken = (user, statusCode, res, req) => {
     console.log(res.cookies)
     console.log("🚀---- Cookies in createAndSendToken -----🚀")
 
+    let hashedSessionId = crypto.createHash("sha256")
+        .update(req.sessionID)
+        .digest("hex")
+    user.sessionId = hashedSessionId;
+    await user.save();
+    user.password = undefined
+    user.sessionId = undefined;
 
     res.status(statusCode).json({
         status: "success",
@@ -77,7 +84,6 @@ const clearAllCookies = (req, res, next) => {
         res.cookie(cookieName, '', { expires: new Date(0) });
     }
     res.send("all Cookies Has been Deleted")
-
 }
 
 const getCookies = (req, res, next) => {
@@ -109,6 +115,7 @@ const register = catchAsync(async (req, res, next) => {
     //save user and return respond
     const user = await newUser.save();
     user.password = undefined;
+    user.sessionId = undefined;
 
     return await sendTokenToEmail("account")(req, res, next)
 
@@ -128,7 +135,6 @@ const login = catchAsync(async (req, res, next) => {
         // return next(new AppError("Email Isn't Verfied\nA verification link has been sent to your email", 401))
     }
     req.headers.authorization = "Bearer " + signToken(user._id);
-    user.password = undefined
     createSendToken(user, 200, res, req)
 
 })
@@ -137,24 +143,31 @@ const login = catchAsync(async (req, res, next) => {
 const protect = catchAsync(async (req, res, next) => {
     //let token = null;
     let token = req.headers.authorization || false;
-    console.log("🚀---- Tokens in protect -----🚀")
-    console.log("Cookies=> ", req.cookies)
-    console.log("Header Auth=> ", req.headers.authorization)
-    console.log("🚀---- Tokens in protect -----🚀")
-    if (token.startsWith("X-Auth-Bearer"))
+    // console.log("🚀---- Tokens in protect -----🚀")
+    // console.log("Cookies=> ", req.cookies)
+    // console.log("Header Auth=> ", req.headers.authorization)
+    // console.log("🚀---- Tokens in protect -----🚀")
+    if (!token)
+        return next(new AppError("you're not logged In, Please Login to get access, Specify Cookie", 401))
+    if (token.startsWith("Bearer"))
         token = req.headers.authorization.split(" ")[1];
     else if (req.cookies["token"])
         token = req.cookies["token"]
     else if (req.cookies["tokenLegacySecure"])
         token = req.cookies["tokenLegacySecure"]
-    else if (!token || token == "null")
-        return next(new AppError("you're not logged In, Please Login to get access, Specify Cookie", 401))
-
-
     const decoded = jwt.verify(token, process.env.JWT_SEC)
-    const currentUser = await User.findById(decoded.id).select("name username gender passwordChangedAt profilePicture isAdmin verified");
+    const currentUser = await User.findById(decoded.id).select("name username gender passwordChangedAt profilePicture isAdmin verified sessionId");
     if (!currentUser)
         return next(new AppError("The user belgons to this token is no longer exist", 401));
+    const hashedSessionId = crypto.createHash("sha256")
+        .update(req.sessionID)
+        .digest("hex")
+    if (currentUser.sessionId !== hashedSessionId) {
+        console.log("The user ALready has an opened session, logging out...");
+        req.session.destroy();
+        res.clearCookie("connect.sid");
+        return next(new AppError("The user ALready has an opened session", 401));
+    }
     const changed = currentUser.isPasswordChanged(decoded.iat);
     // console.log("password changed? in authController.protect ", changed)
     //check if user changed password after the token was issued;
@@ -162,7 +175,6 @@ const protect = catchAsync(async (req, res, next) => {
         return next(new AppError("The User Recently changed his password! Please Login Again.", 401))
     if (!currentUser.verified)
         return next(new AppError("This user isn't verified.", 401))
-
     currentUser.passwordChangedAt = undefined;
     req.user = currentUser;
 

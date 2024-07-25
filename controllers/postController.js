@@ -53,6 +53,8 @@ const getPost = async (req, res, next) => {
 const getTimelinePosts = async (req, res, next) => {
     // const currentUser = await User.findById(req.params.id);
     // const followers = await Followers.find({ follower: req.params.id })
+    console.log(req.sessionID)
+
     const followers = await Followers.find({ follower: req.user.id }).select("user -_id")
     const users = [req.user._id, ...followers.map((follower) => follower.user)]
 

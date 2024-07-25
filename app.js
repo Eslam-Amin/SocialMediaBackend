@@ -8,6 +8,9 @@ const mongoSanitize = require("express-mongo-sanitize")
 const xss = require("xss-clean")
 const hpp = require("hpp")
 const bodyParser = require('body-parser');
+const session = require("express-session");
+
+
 // const dns = require("dns")
 
 
@@ -26,6 +29,15 @@ const globalErrorHandler = require("./controllers/errorController")
 
 
 const app = express();
+app.use(session({
+    secret: "secretSuperKeyForSessionID_socialNetwork",
+    resave: false,
+    saveUninitialized: true,
+    cookie: {
+        maxAge: 24 * 60 * 60 * 60 * 1000,
+        secure: process.env.NODE_ENV === "production"
+    }
+}));
 app.set('trust proxy', true);
 app.set('trust proxy', 'loopback, linklocal, uniquelocal');
 
@@ -61,8 +73,7 @@ const limiter = rateLimit({
     message: "Too many requests fromt this IP, please try again in an hour!"
 })
 
-// const origin = process.env.NODE_ENV === "production" ? "https://social-media-network.netlify.app/" : "http://localhost:3001/"
-app.use(cors({ credentials: true, origin: true, maxAge: 3600000 }));
+app.use(cors({ credentials: true, origin: true }));
 
 
 //middleware
@@ -80,7 +91,9 @@ app.get('/', (req, res) => {
     if (clientIp === '::1') {
         clientIp = '127.0.0.1';
     }
-    res.send(`Client IP address is ${clientIp}`);
+
+
+    res.send(`Your IP address is ${clientIp}`);
 });
 
 app.use("/api/v3/users", userRouter);
