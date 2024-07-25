@@ -7,6 +7,16 @@ const catchAsync = require("./../utils/catchAsync");
 const generateHTML = require("./../utils/generateHTML")
 const { sendEmail, sendEmailGoogle } = require("./../utils/email")
 
+
+
+const removeSensitiveDataOfUser = (user) => {
+    user.password = undefined;
+    user.sessionId = undefined;
+    user.verificationToken = undefined;
+    user.passwordChangedAt = undefined;
+    user.verifyTokenExpiresAt = undefined;
+
+}
 const signToken = id => {
     return jwt.sign({
         id
@@ -58,8 +68,7 @@ const createSendToken = async (user, statusCode, res, req) => {
         .digest("hex")
     user.sessionId = hashedSessionId;
     await user.save();
-    user.password = undefined
-    user.sessionId = undefined;
+    removeSensitiveDataOfUser(user)
 
     res.status(statusCode).json({
         status: "success",
@@ -118,8 +127,7 @@ const register = catchAsync(async (req, res, next) => {
     });
     //save user and return respond
     const user = await newUser.save();
-    user.password = undefined;
-    user.sessionId = undefined;
+    // removeSensitiveDataOfUser(user)
 
     return await sendTokenToEmail("account")(req, res, next)
 
@@ -179,7 +187,7 @@ const protect = catchAsync(async (req, res, next) => {
         return next(new ApiError("The User Recently changed his password! Please Login Again.", 401))
     if (!currentUser.verified)
         return next(new ApiError("This user isn't verified.", 401))
-    currentUser.passwordChangedAt = undefined;
+    removeSensitiveDataOfUser(currentUser);
     req.user = currentUser;
 
     next();
