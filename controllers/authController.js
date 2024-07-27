@@ -325,10 +325,10 @@ const resetPassword = catchAsync(async (req, res, next) => {
     user.passwordChangedAt = Date.now()
     await user.save();
 
-    user.passwordChangedAt = undefined
-    user.password = undefined
-    user.createdAt = undefined
-    user.updatedAt = undefined
+    // user.passwordChangedAt = undefined
+    // user.password = undefined
+    // user.createdAt = undefined
+    // user.updatedAt = undefined
 
     createSendToken(user, 200, res, req)
 })
