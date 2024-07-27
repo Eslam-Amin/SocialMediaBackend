@@ -103,6 +103,14 @@ app.use("/api/v3/posts", postRouter);
 app.use("/api/v3/conversation", conversationRouter);
 app.use("/api/v3/message", messageRouter);
 
+
+app.get("/", (req, res, next)=>{
+    res.status(200).json({
+        status:true,
+        data:"The Server is up and RUNNING!"
+    })
+})
+
 //Redirect unknown Errors
 app.all("*", (req, res, next) => {
     next(new ApiError(`Can't Find ${req.originalUrl} on this server`, 404));

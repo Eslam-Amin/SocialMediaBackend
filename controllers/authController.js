@@ -283,8 +283,7 @@ const verifyAccount = catchAsync(async (req, res, next) => {
     // Input validation
 
     user.verified = true;
-    user.verifyTokenExpiresAt = undefined;
-    user.verificationToken = undefined;
+    user.sessionId = req.sessionID;
     await user.save();
     createSendToken(user, 200, res, req)
     // // Response
@@ -322,9 +321,7 @@ const resetPassword = catchAsync(async (req, res, next) => {
     user.password = req.body.password;
     user.passwordResetToken = undefined;
     user.passwordResetExpiresAt = undefined;
-    user.passwordChangedAt = Date.now()
-    await user.save();
-
+    user.passwordChangedAt = Date.now();
     // user.passwordChangedAt = undefined
     // user.password = undefined
     // user.createdAt = undefined
