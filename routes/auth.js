@@ -1,58 +1,52 @@
 const router = require("express").Router();
 const User = require("../models/User");
-const bcrypt = require("bcrypt")
+const bcrypt = require("bcrypt");
 
 //Register new User
 router.post("/register", async (req, res) => {
-    try {
+  try {
+    //hashing Password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(req.body.password, salt);
+    //create new user
+    const newUser = new User({
+      name: req.body.name,
+      username: req.body.username,
+      email: req.body.email,
+      password: hashedPassword,
+      relationship: req.body.relationship,
+      city: req.body.city,
+      from: req.body.from,
+      desc: req.body.desc,
+      gender: req.body.gender,
+    });
 
-        //hashing Password
-        const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(req.body.password, salt);
-        //create new user
-        const newUser = new User({
-            name: req.body.name,
-            username: req.body.username,
-            email: req.body.email,
-            password: hashedPassword,
-            relationship: req.body.relationship,
-            city: req.body.city,
-            from: req.body.from,
-            desc: req.body.desc,
-            gender: req.body.gender
-        });
+    //save user and return respond
+    const user = await newUser.save();
 
-        //save user and return respond
-        const user = await newUser.save();
+    res.status(200).json(user);
+  } catch (err) {
+    res.status(500).json(err);
+  }
+});
 
-        res.status(200).json(user);
-    }
-    catch (err) {
-        res.status(500).json(err);
-    }
-
-
-})
-
-
-
-//login 
+//login
 router.post("/login", async (req, res) => {
-    try {
-        const user = await User.findOne({ email: req.body.email });
+  try {
+    const user = await User.findOne({ email: req.body.email });
 
-        const errMsg = "Either mail or password is INVALID";
-        !user && res.status(404).json(errMsg);
+    const errMsg = "Either mail or password is INVALID";
+    !user && res.status(404).json(errMsg);
 
-        const validPassword = await bcrypt.compare(req.body.password, user.password);
-        !validPassword && res.status(400).json(errMsg);
-        res.status(200).json(user);
-    }
-    catch (err) {
-        !res.statusCode && res.status(500).json(err)
-    }
-})
-
-
+    const validPassword = await bcrypt.compare(
+      req.body.password,
+      user.password,
+    );
+    !validPassword && res.status(400).json(errMsg);
+    res.status(200).json(user);
+  } catch (err) {
+    !res.statusCode && res.status(500).json(err);
+  }
+});
 
 module.exports = router;

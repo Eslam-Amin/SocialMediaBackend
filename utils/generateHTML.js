@@ -1,20 +1,20 @@
 const generateHTML = ({
-    // link = "localhost:3001/auth/",
-    link,
-    logo = process.env.LOGO_URL,
-    backgroundColor = "#ffffff",
-    primaryColor = process.env.PRIMARY_COLOR,
-    secondaryColor = "#ffffff",
-    emailTitle,
-    emailSubTitle,
-    btnText,
-    btnLink,
-    belowLink,
-    footerNote,
-    footerLink,
-    user
+  // link = "localhost:3001/auth/",
+  link,
+  logo = process.env.LOGO_URL,
+  backgroundColor = "#ffffff",
+  primaryColor = process.env.PRIMARY_COLOR,
+  secondaryColor = "#ffffff",
+  emailTitle,
+  emailSubTitle,
+  btnText,
+  btnLink,
+  belowLink,
+  footerNote,
+  footerLink,
+  user,
 }) => {
-    const html = `<!DOCTYPE html>
+  const html = `<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -107,8 +107,8 @@ const generateHTML = ({
     </div>
 </body>
 </html>
-`
-    return html
-}
+`;
+  return html;
+};
 
 module.exports = generateHTML;
