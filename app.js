@@ -23,16 +23,16 @@ const messageRouter = require("./routes/message.routes");
 
 const ApiError = require("./utils/ApiError");
 const globalErrorHandler = require("./controllers/errorController");
-// let HOSTED_URL = "https://socialmediabackend-7o1t.onrender.com/";
-// cron.schedule("*/10 * * * *", async () => {
-//   console.log("Restarting Server");
-//   try {
-//     const response = await axios.get(HOSTED_URL);
-//     console.log("Response:", response.data);
-//   } catch (error) {
-//     console.error("Error calling the route:", error);
-//   }
-// });
+let HOSTED_URL = "https://socialmediabackend-7o1t.onrender.com/";
+cron.schedule("*/10 * * * *", async () => {
+  console.log("Restarting Server");
+  try {
+    const response = await axios.get(HOSTED_URL);
+    console.log("Response:", response.data);
+  } catch (error) {
+    console.error("Error calling the route:", error);
+  }
+});
 const app = express();
 app.use(
   session({
