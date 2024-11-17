@@ -9,13 +9,13 @@ const userSchema = new mongoose.Schema(
       required: [true, "username is required"],
       min: 3,
       max: 20,
-      unique: true,
+      unique: true
     },
     name: {
       type: String,
       required: [true, "name is required"],
       min: 3,
-      max: 20,
+      max: 20
     },
     email: {
       type: String,
@@ -23,79 +23,80 @@ const userSchema = new mongoose.Schema(
       unique: true,
       max: 50,
       lowercase: true,
+      trim: true
     },
     password: {
       type: String,
       required: [true, "password is required"],
       min: 6,
-      select: false,
+      select: false
     },
     profilePicture: {
       type: String,
-      default: "",
+      default: ""
     },
     coverPicture: {
       type: String,
-      default: "",
+      default: ""
     },
     isAdmin: {
       type: Boolean,
-      default: false,
+      default: false
     },
     desc: {
       type: String,
-      max: 100,
+      max: 100
     },
     city: {
       type: String,
       required: [true, "city is required"],
-      max: 50,
+      max: 50
     },
 
     from: {
       type: String,
       required: [true, "from is required"],
-      max: 50,
+      max: 50
     },
     relationship: {
       type: String,
       // enum: [1, 2, 3, 4],
       enum: ["single", "engaged", "married", "other"],
-      required: [true, "relationship is required"],
+      required: [true, "relationship is required"]
     },
     gender: {
       type: String,
       enum: ["male", "female"],
-      required: [true, "gender is required"],
+      required: [true, "gender is required"]
     },
     passwordChangedAt: {
       type: Date,
-      default: Date.now(),
+      default: Date.now()
     },
     passwordResetExpiresAt: Date,
     passwordResetToken: String,
     active: {
       type: Boolean,
       default: true,
-      select: false,
+      select: false
     },
     verificationToken: String,
     verifyTokenExpiresAt: Date,
     sessionId: String,
     verified: {
       type: Boolean,
-      default: false,
-    },
+      default: false
+    }
   },
   {
     toJSON: {
-      virtuals: true,
+      virtuals: true
     },
     toObject: {
-      virtuals: true,
-    },
+      virtuals: true
+    }
   },
-  { timestamps: true },
+  { timestamps: true }
 );
 
 //runs on changing the password
@@ -119,7 +120,7 @@ userSchema.pre("save", async function (next) {
 //used in login
 userSchema.methods.validPassword = async function (
   candidatePassword,
-  userPassword,
+  userPassword
 ) {
   return await bcrypt.compare(candidatePassword, userPassword);
 };
@@ -131,7 +132,7 @@ userSchema.methods.isPasswordChanged = function (JwtTimestamp) {
     return false;
   const changedTimestamp = parseInt(
     this.passwordChangedAt.getTime() / 1000,
-    10,
+    10
   );
   //console.log(JwtTimestamp, changedTimestamp)
   return JwtTimestamp < changedTimestamp;
@@ -165,14 +166,14 @@ userSchema.pre(/^find/, function (next) {
 userSchema.virtual("followers", {
   ref: "Friends",
   foreignField: "user",
-  localField: "_id",
+  localField: "_id"
 });
 
 //virtual Populate
 userSchema.virtual("followings", {
   ref: "Friends",
   foreignField: "userFollowed",
-  localField: "_id",
+  localField: "_id"
 });
 
 module.exports = mongoose.model("User", userSchema);

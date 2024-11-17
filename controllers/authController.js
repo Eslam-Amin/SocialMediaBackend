@@ -17,24 +17,24 @@ const removeSensitiveDataOfUser = (user) => {
 const signToken = (id) => {
   return jwt.sign(
     {
-      id,
+      id
     },
     process.env.JWT_SEC,
     {
-      expiresIn: process.env.JWT_EXPIRES_IN,
-    },
+      expiresIn: process.env.JWT_EXPIRES_IN
+    }
   );
 };
 
 const createSendToken = async (user, statusCode, res, req) => {
   const expiryDate = new Date(
-    Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
+    Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
   );
   const cookieOptions = {
     expires: expiryDate,
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
+    sameSite: process.env.NODE_ENV === "production" ? "none" : "strict"
   };
   const legacyOptionsSecure = {
     expires: expiryDate,
@@ -42,7 +42,7 @@ const createSendToken = async (user, statusCode, res, req) => {
     secure: process.env.NODE_ENV === "production",
     sameSite: process.env.NODE_ENV === "production" ? "none" : "strict",
     maxAge: expiryDate,
-    path: "/",
+    path: "/"
   };
 
   const token = signToken(user._id);
@@ -68,7 +68,7 @@ const createSendToken = async (user, statusCode, res, req) => {
   res.status(statusCode).json({
     status: "success",
     user,
-    token,
+    token
   });
 };
 
@@ -80,12 +80,12 @@ const clearCookie = (req, res, next) => {
   return res
     .cookie("token", "loggedOut", {
       expires: new Date(
-        Date.now() - process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000,
-      ),
+        Date.now() - process.env.JWT_COOKIE_EXPIRES_IN * 24 * 60 * 60 * 1000
+      )
     })
     .json({
       status: "success",
-      message: "cookies are cleared",
+      message: "cookies are cleared"
     });
 };
 
@@ -117,7 +117,7 @@ const register = catchAsync(async (req, res, next) => {
     from: req.body.from,
     desc: req.body.desc,
     gender: req.body.gender,
-    passwordChangedAt: req.body.passwordChangedAt,
+    passwordChangedAt: req.body.passwordChangedAt
   });
   //save user and return respond
   const user = await newUser.save();
@@ -131,8 +131,8 @@ const login = catchAsync(async (req, res, next) => {
   if (!email || !password)
     return next(new ApiError("please Provide email or password", 401));
 
-  const user = await User.findOne({ email }).select(
-    "+password -passwordChangedAt",
+  const user = await User.findOne({ email: email?.toLowerCase() }).select(
+    "+password -passwordChangedAt"
   );
 
   if (!user || !(await user.validPassword(password, user.password)))
@@ -156,8 +156,8 @@ const protect = catchAsync(async (req, res, next) => {
     return next(
       new ApiError(
         "you're not logged In, Please Login to get access, Specify Cookie",
-        401,
-      ),
+        401
+      )
     );
   if (token.startsWith("Bearer"))
     token = req.headers.authorization.split(" ")[1];
@@ -166,11 +166,11 @@ const protect = catchAsync(async (req, res, next) => {
     token = req.cookies["tokenLegacySecure"];
   const decoded = jwt.verify(token, process.env.JWT_SEC);
   const currentUser = await User.findById(decoded.id).select(
-    "name username gender passwordChangedAt profilePicture isAdmin verified sessionId",
+    "name username gender passwordChangedAt profilePicture isAdmin verified sessionId"
   );
   if (!currentUser)
     return next(
-      new ApiError("The user belgons to this token is no longer exist", 401),
+      new ApiError("The user belgons to this token is no longer exist", 401)
     );
   const hashedSessionId = crypto
     .createHash("sha256")
@@ -189,8 +189,8 @@ const protect = catchAsync(async (req, res, next) => {
     return next(
       new ApiError(
         "The User Recently changed his password! Please Login Again.",
-        401,
-      ),
+        401
+      )
     );
   if (!currentUser.verified)
     return next(new ApiError("This user isn't verified.", 401));
@@ -223,8 +223,12 @@ const sendTokenToEmail = (option) =>
     }
     await user.save();
     // Send email
-    const resetURL = `${process.env.FRONTEND_URL}/authenticate/${option === "account" ? "verify-account" : "reset-password"}/${resetToken}`;
-    const btnLink = `${req.get("origin")}/authenticate/${option === "account" ? "verify-account" : "reset-password"}/${resetToken}`;
+    const resetURL = `${process.env.FRONTEND_URL}/authenticate/${
+      option === "account" ? "verify-account" : "reset-password"
+    }/${resetToken}`;
+    const btnLink = `${req.get("origin")}/authenticate/${
+      option === "account" ? "verify-account" : "reset-password"
+    }/${resetToken}`;
     const html = generateHTML({
       user,
       link: resetURL,
@@ -234,27 +238,27 @@ const sendTokenToEmail = (option) =>
       btnLink: resetURL,
       belowLink: resetURL,
       footerNote:
-        "You received this email because you were added as an admin on our website. If you did not initiate this action, please ignore this email.",
+        "You received this email because you were added as an admin on our website. If you did not initiate this action, please ignore this email."
     });
     try {
       await sendEmailGoogle({
         email: user.email,
         subject: `${process.env.APP_NAME} account verification (Valid for 10mins)`,
-        html: html,
+        html: html
       });
     } catch (err) {
       console.log(err);
       return next(
         new ApiError(
           "Unable to send verification email, please try again later.",
-          422,
-        ),
+          422
+        )
       );
     }
     // Response
     res.status(200).json({
       success: true,
-      msg: "Verification email is sent to your email address",
+      msg: "Verification email is sent to your email address"
     });
   });
 
@@ -272,8 +276,8 @@ const verifyAccount = catchAsync(async (req, res, next) => {
   const user = await User.findOne({
     verificationToken: hashedToken,
     verifyTokenExpiresAt: {
-      $gt: Date.now(),
-    },
+      $gt: Date.now()
+    }
   });
   if (!user)
     return next(new ApiError("Token is Expired!, Please Try Again", 400));
@@ -308,8 +312,8 @@ const resetPassword = catchAsync(async (req, res, next) => {
   const user = await User.findOne({
     passwordResetToken: hashedToken,
     passwordResetExpiresAt: {
-      $gt: Date.now(),
-    },
+      $gt: Date.now()
+    }
   });
   if (!user) return next(new ApiError("token is invalid or has expired", 300));
   user.password = req.body.password;
@@ -329,7 +333,7 @@ const restrictTo = (...roles) => {
     //roles ["admin"]
     if (!roles.includes(req.user.role))
       return next(
-        new ApiError("you don't have premission to perform this action", 403),
+        new ApiError("you don't have permission to perform this action", 403)
       );
     next();
   };
@@ -344,5 +348,5 @@ module.exports = {
   resetPassword,
   clearAllCookies,
   getCookies,
-  verifyAccount,
+  verifyAccount
 };
