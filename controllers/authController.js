@@ -170,17 +170,22 @@ const protect = catchAsync(async (req, res, next) => {
   );
   if (!currentUser)
     return next(
-      new ApiError("The user belgons to this token is no longer exist", 401)
+      new ApiError("The user belongs to this token is no longer exist", 401)
     );
   const hashedSessionId = crypto
     .createHash("sha256")
     .update(req.sessionID)
     .digest("hex");
   if (currentUser.sessionId !== hashedSessionId) {
-    console.log("The user ALready has an opened session, logging out...");
+    // console.log("this user Already has an opened session, logging out...");
     req.session.destroy();
     res.clearCookie("connect.sid");
-    return next(new ApiError("The user ALready has an opened session", 401));
+    return next(
+      new ApiError(
+        "this user Already has an opened session, logging out...",
+        401
+      )
+    );
   }
   const changed = currentUser.isPasswordChanged(decoded.iat);
   // console.log("password changed? in authController.protect ", changed)
