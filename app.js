@@ -79,7 +79,7 @@ app.use(hpp());
 const limiter = rateLimit({
   max: 1000,
   windowMs: 60 * 60 * 1000,
-  message: "Too many requests fromt this IP, please try again in an hour!"
+  message: "Too many requests from this IP, please try again in an hour!"
 });
 
 app.use(cors({ credentials: true, origin: true }));
@@ -99,9 +99,10 @@ app.get("/", (req, res) => {
   if (clientIp === "::1") {
     clientIp = "127.0.0.1";
   }
-  // console.log(req.headers["user-agent"])
 
-  res.send(`Your IP address is ${clientIp}`);
+  res.send(
+    `Your IP address is ${clientIp}, 🚀 ~ app.get ~ remoteAddress: ${req.socket.remoteAddress}`
+  );
 });
 
 app.use("/api/v3/users", userRouter);
