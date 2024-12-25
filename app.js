@@ -106,7 +106,7 @@ app.get("/", (req, res) => {
   );
 });
 
-app.get(`${baseURL_v1}/mac-address`, (req, res) => {
+app.get(`/mac-address`, (req, res) => {
   // console.log("🚀 ~ app.get ~ os:", os);
   // console.log("🚀 ~ app.get ~ userInfo:", os.userInfo());
   // console.log("🚀 ~ app.get ~ version:", os.version());
