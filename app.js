@@ -1,4 +1,5 @@
 const path = require("path");
+const os = require("os");
 const express = require("express");
 const helmet = require("helmet");
 const morgan = require("morgan");
@@ -105,6 +106,27 @@ app.get("/", (req, res) => {
   );
 });
 
+app.get("/mac-address", (req, res) => {
+  // console.log("🚀 ~ app.get ~ os:", os);
+  console.log("🚀 ~ app.get ~ userInfo:", os.userInfo());
+  console.log("🚀 ~ app.get ~ version:", os.version());
+  console.log("🚀 ~ app.get ~ machine:", os.machine());
+  // console.log("🚀 ~ app.get ~ networkInterfaces:", os.networkInterfaces());
+  console.log("🚀 ~ app.get ~ cpus:", os.cpus());
+  const networkInterfaces = os.networkInterfaces();
+  const macAddresses = [];
+
+  for (const interfaceName in networkInterfaces) {
+    const interfaces = networkInterfaces[interfaceName];
+    for (const iface of interfaces) {
+      if (iface.mac && iface.mac !== "00:00:00:00:00:00") {
+        macAddresses.push({ interfaceName, mac: iface.mac });
+      }
+    }
+  }
+
+  res.json(macAddresses);
+});
 app.use("/api/v3/users", userRouter);
 app.use("/api/v3/auth", authRouter);
 app.use("/api/v3/posts", postRouter);
