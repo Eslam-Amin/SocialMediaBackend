@@ -106,26 +106,40 @@ app.get("/", (req, res) => {
   );
 });
 
-app.get("/mac-address", (req, res) => {
+app.get(`${baseURL_v1}/mac-address`, (req, res) => {
   // console.log("🚀 ~ app.get ~ os:", os);
-  console.log("🚀 ~ app.get ~ userInfo:", os.userInfo());
-  console.log("🚀 ~ app.get ~ version:", os.version());
-  console.log("🚀 ~ app.get ~ machine:", os.machine());
+  // console.log("🚀 ~ app.get ~ userInfo:", os.userInfo());
+  // console.log("🚀 ~ app.get ~ version:", os.version());
+  // console.log("🚀 ~ app.get ~ machine:", os.machine());
   // console.log("🚀 ~ app.get ~ networkInterfaces:", os.networkInterfaces());
-  console.log("🚀 ~ app.get ~ cpus:", os.cpus());
-  const networkInterfaces = os.networkInterfaces();
-  const macAddresses = [];
+  // console.log("🚀 ~ app.get ~ cpus:", os.cpus());
+  // const networkInterfaces = os.networkInterfaces();
+  // const macAddresses = [];
 
-  for (const interfaceName in networkInterfaces) {
-    const interfaces = networkInterfaces[interfaceName];
-    for (const iface of interfaces) {
-      if (iface.mac && iface.mac !== "00:00:00:00:00:00") {
-        macAddresses.push({ interfaceName, mac: iface.mac });
-      }
-    }
-  }
+  // for (const interfaceName in networkInterfaces) {
+  //   const interfaces = networkInterfaces[interfaceName];
+  //   for (const iface of interfaces) {
+  //     if (iface.mac && iface.mac !== "00:00:00:00:00:00") {
+  //       macAddresses.push({ interfaceName, mac: iface.mac });
+  //     }
+  //   }
+  // }
 
-  res.json(macAddresses);
+  let ip = {
+    "cf-connecting-ip": req.headers["cf-connecting-ip"],
+    "x-forwarded-for": req.headers["x-forwarded-for"],
+    "x-real-ip": req.headers["x-real-ip"],
+    "req.connection.remoteAddress": req.connection.remoteAddress,
+    "req.socket.remoteAddress": req.socket.remoteAddress,
+    "req.ip": req.ip,
+    "req.ips": req.ips,
+    "req.connection.localAddress": req.connection.localAddress,
+    "req.connection.localPort": req.connection.localPort,
+    "req.connection.remotePort": req.connection.remotePort,
+    "req.connection.address": req.connection.address
+  };
+
+  res.json(ip);
 });
 app.use("/api/v3/users", userRouter);
 app.use("/api/v3/auth", authRouter);
